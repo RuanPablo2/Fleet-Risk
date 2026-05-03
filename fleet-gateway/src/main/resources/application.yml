@@ -7,7 +7,6 @@ spring:
   threads:
     virtual:
       enabled: true
-
   cloud:
     gateway:
       mvc:
