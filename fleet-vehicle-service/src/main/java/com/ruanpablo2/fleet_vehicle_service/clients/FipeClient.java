@@ -16,7 +16,7 @@ public class FipeClient {
     public VehicleFipeResponse fetchVehicleData(String fipeCode, String yearId) {
         try {
             return restClient.get()
-                    .uri("/carros/{fipeCode}/years/{yearId}", fipeCode, yearId)
+                    .uri("/cars/{fipeCode}/years/{yearId}", fipeCode, yearId)
                     .retrieve()
                     .body(VehicleFipeResponse.class);
         } catch (Exception e) {

@@ -20,7 +20,13 @@ public class VehicleController {
 
     @GetMapping("/{fipeCode}/{yearId}")
     public ResponseEntity<VehicleFipeResponse> getVehicle(@PathVariable String fipeCode, @PathVariable String yearId) {
+        System.out.println("Received a request for: " + fipeCode + " year: " + yearId);
         VehicleFipeResponse response = vehicleService.getVehicleDetails(fipeCode, yearId);
+
+        if (response == null) {
+            System.out.println("❌ Vehicle not found in FIPE or service error.");
+        }
+
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 }
