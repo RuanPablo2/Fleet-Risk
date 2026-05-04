@@ -1,7 +1,9 @@
 package com.ruanpablo2.fleet_vehicle_service.services;
 
 import com.ruanpablo2.fleet_vehicle_service.clients.FipeClient;
+import com.ruanpablo2.fleet_vehicle_service.config.RabbitMQConfig;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
@@ -14,11 +16,16 @@ public class VehicleService {
     private final FipeClient fipeClient;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final RabbitTemplate rabbitTemplate;
 
-    public VehicleService(FipeClient fipeClient, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+    public VehicleService(FipeClient fipeClient,
+                          RedisTemplate<String, Object> redisTemplate,
+                          ObjectMapper objectMapper,
+                          RabbitTemplate rabbitTemplate) {
         this.fipeClient = fipeClient;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public VehicleFipeResponse getVehicleDetails(String fipeCode, String yearId) {
@@ -27,6 +34,9 @@ public class VehicleService {
 
         if (cachedData != null) {
             System.out.println("⚡ [CACHE HIT] Returning from Redis...");
+
+            sendToRabbit(cachedData);
+
             return objectMapper.convertValue(cachedData, VehicleFipeResponse.class);
         }
 
@@ -35,8 +45,25 @@ public class VehicleService {
 
         if (response != null) {
             redisTemplate.opsForValue().set(key, response, Duration.ofHours(24));
+
+            sendToRabbit(response);
         }
 
         return response;
+    }
+
+    private void sendToRabbit(Object data) {
+        try {
+            String json = objectMapper.writeValueAsString(data);
+
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE_VEHICLE,
+                    RabbitMQConfig.ROUTING_KEY_CONSULTED,
+                    json
+            );
+            System.out.println("✉️ [RABBITMQ] Event sent to the Exchange!");
+        } catch (Exception e) {
+            System.err.println("❌ Error sending to RabbitMQ: " + e.getMessage());
+        }
     }
 }
