@@ -3,10 +3,7 @@ package com.ruanpablo2.fleet_vehicle_service.controllers;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
 import com.ruanpablo2.fleet_vehicle_service.services.VehicleService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -28,5 +25,16 @@ public class VehicleController {
         }
 
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<String> syncFipeData() {
+        try {
+            vehicleService.startFullSync();
+            return ResponseEntity.ok("🚀 Synchronization has started! Follow the progress in the console logs.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("❌ Error starting synchronization: " + e.getMessage());
+        }
     }
 }
