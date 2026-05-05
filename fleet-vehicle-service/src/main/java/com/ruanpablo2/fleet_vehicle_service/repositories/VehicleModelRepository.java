@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface VehicleModelRepository extends JpaRepository<VehicleModel, Long> {
 
-    List<VehicleModel> findByNameContainingIgnoreCase(String name);
+    List<VehicleModel> findTop20ByNameContainingIgnoreCase(String name);
 }

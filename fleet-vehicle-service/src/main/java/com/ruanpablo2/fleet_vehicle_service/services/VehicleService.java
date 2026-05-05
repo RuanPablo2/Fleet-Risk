@@ -4,8 +4,11 @@ import com.ruanpablo2.fleet_vehicle_service.clients.FipeClient;
 import com.ruanpablo2.fleet_vehicle_service.config.RabbitMQConfig;
 import com.ruanpablo2.fleet_vehicle_service.dtos.BrandDTO;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
+import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleModelSearchDTO;
 import com.ruanpablo2.fleet_vehicle_service.models.Brand;
+import com.ruanpablo2.fleet_vehicle_service.models.VehicleModel;
 import com.ruanpablo2.fleet_vehicle_service.repositories.BrandRepository;
+import com.ruanpablo2.fleet_vehicle_service.repositories.VehicleModelRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VehicleService {
@@ -22,17 +26,20 @@ public class VehicleService {
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
     private final BrandRepository brandRepository;
+    private final VehicleModelRepository vehicleModelRepository;
 
     public VehicleService(FipeClient fipeClient,
                           RedisTemplate<String, Object> redisTemplate,
                           ObjectMapper objectMapper,
                           RabbitTemplate rabbitTemplate,
-                          BrandRepository brandRepository) {
+                          BrandRepository brandRepository,
+                          VehicleModelRepository vehicleModelRepository) {
         this.fipeClient = fipeClient;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.rabbitTemplate = rabbitTemplate;
         this.brandRepository = brandRepository;
+        this.vehicleModelRepository = vehicleModelRepository;
     }
 
     public void startFullSync() {
@@ -85,5 +92,19 @@ public class VehicleService {
         } catch (Exception e) {
             System.err.println("❌ Error sending to RabbitMQ: " + e.getMessage());
         }
+    }
+
+    public List<VehicleModelSearchDTO> searchModelsLocally(String query) {
+        System.out.println("🔍 Searching models locally for query: " + query);
+
+        List<VehicleModel> models = vehicleModelRepository.findTop20ByNameContainingIgnoreCase(query);
+
+        return models.stream()
+                .map(model -> new VehicleModelSearchDTO(
+                        model.getId(),
+                        model.getName(),
+                        model.getBrand().getName()
+                ))
+                .collect(Collectors.toList());
     }
 }

@@ -1,9 +1,12 @@
 package com.ruanpablo2.fleet_vehicle_service.controllers;
 
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
+import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleModelSearchDTO;
 import com.ruanpablo2.fleet_vehicle_service.services.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -36,5 +39,15 @@ public class VehicleController {
             return ResponseEntity.internalServerError()
                     .body("❌ Error starting synchronization: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/models/search")
+    public ResponseEntity<List<VehicleModelSearchDTO>> searchModels(@RequestParam("query") String query) {
+        if (query == null || query.trim().length() < 2) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<VehicleModelSearchDTO> results = vehicleService.searchModelsLocally(query);
+        return ResponseEntity.ok(results);
     }
 }
