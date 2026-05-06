@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "quotes")
@@ -16,14 +18,7 @@ public class Quote {
 
     private String customerName;
 
-    private String licensePlate;
-
-    private String vehicleModel;
-
-    private String modelYear;
-
-    private BigDecimal fipeValue;
-
+    @Column(precision = 19, scale = 2)
     private BigDecimal totalPremium;
 
     @Enumerated(EnumType.STRING)
@@ -31,25 +26,30 @@ public class Quote {
 
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "quote", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuoteVehicle> vehicles = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         if (this.status == null) this.status = QuoteStatus.PENDING;
     }
 
+    public void addVehicle(QuoteVehicle vehicle) {
+        vehicles.add(vehicle);
+        vehicle.setQuote(this);
+    }
+
     public Quote() {
     }
 
-    public Quote(Long id, String customerName, String licensePlate, String vehicleModel, String modelYear, BigDecimal fipeValue, BigDecimal totalPremium, QuoteStatus status, LocalDateTime createdAt) {
+    public Quote(Long id, String customerName, BigDecimal totalPremium, QuoteStatus status, LocalDateTime createdAt, List<QuoteVehicle> vehicles) {
         this.id = id;
         this.customerName = customerName;
-        this.licensePlate = licensePlate;
-        this.vehicleModel = vehicleModel;
-        this.modelYear = modelYear;
-        this.fipeValue = fipeValue;
         this.totalPremium = totalPremium;
         this.status = status;
         this.createdAt = createdAt;
+        this.vehicles = vehicles;
     }
 
     public Long getId() {
@@ -66,38 +66,6 @@ public class Quote {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
-    }
-
-    public String getLicensePlate() {
-        return licensePlate;
-    }
-
-    public void setLicensePlate(String licensePlate) {
-        this.licensePlate = licensePlate;
-    }
-
-    public String getVehicleModel() {
-        return vehicleModel;
-    }
-
-    public void setVehicleModel(String vehicleModel) {
-        this.vehicleModel = vehicleModel;
-    }
-
-    public String getModelYear() {
-        return modelYear;
-    }
-
-    public void setModelYear(String modelYear) {
-        this.modelYear = modelYear;
-    }
-
-    public BigDecimal getFipeValue() {
-        return fipeValue;
-    }
-
-    public void setFipeValue(BigDecimal fipeValue) {
-        this.fipeValue = fipeValue;
     }
 
     public BigDecimal getTotalPremium() {
@@ -122,5 +90,13 @@ public class Quote {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<QuoteVehicle> getVehicles() {
+        return vehicles;
+    }
+
+    public void setVehicles(List<QuoteVehicle> vehicles) {
+        this.vehicles = vehicles;
     }
 }
