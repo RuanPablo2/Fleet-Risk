@@ -13,7 +13,8 @@ import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFuncti
 @Configuration
 public class GatewayConfig {
 
-    private String quoteServiceUrl = "http://localhost:8081";
+    private final String quoteServiceUrl = "http://localhost:8081";
+    private final String vehicleServiceUrl = "http://localhost:8082";
 
     @Bean
     public RouterFunction<ServerResponse> quoteRoute() {
@@ -22,6 +23,16 @@ public class GatewayConfig {
         return route("quote-service-route")
                 .route(RequestPredicates.path("/api/quotes/**"), http())
                 .before(uri(quoteServiceUrl))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> vehicleRoute() {
+        System.out.println("🚦 [FLEET GATEWAY] Registering route for Vehicle Service: " + vehicleServiceUrl);
+
+        return route("vehicle-service-route")
+                .route(RequestPredicates.path("/api/vehicles/**"), http())
+                .before(uri(vehicleServiceUrl))
                 .build();
     }
 }
