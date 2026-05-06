@@ -1,5 +1,6 @@
 package com.ruanpablo2.fleet_quote_service.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -27,6 +28,7 @@ public class QuoteVehicle {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quote_id", nullable = false)
+    @JsonIgnore
     private Quote quote;
 
     public QuoteVehicle() {
