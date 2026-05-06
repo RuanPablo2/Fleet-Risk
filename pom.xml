@@ -54,6 +54,10 @@
 
 	<modules>
 		<module>fleet-common</module>
+		<module>fleet-quote-service</module>
+		<module>fleet-pricing-service</module>
+		<module>fleet-vehicle-service</module>
 	</modules>
+
 
 </project>
