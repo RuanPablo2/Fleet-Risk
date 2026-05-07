@@ -12,14 +12,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/quotes")
 public class QuoteController {
 
-    private final QuoteService service;
+    private final QuoteService quoteService;
 
     public QuoteController(QuoteService service) {
-        this.service = service;
+        this.quoteService = service;
     }
 
     @PostMapping
     public ResponseEntity<Quote> create(@Valid @RequestBody QuoteRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createInitialQuote(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(quoteService.createInitialQuote(request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Quote> getQuote(@PathVariable Long id) {
+        Quote quote = quoteService.getQuoteById(id);
+        return ResponseEntity.ok(quote);
     }
 }

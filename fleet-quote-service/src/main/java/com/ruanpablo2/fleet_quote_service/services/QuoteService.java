@@ -86,4 +86,9 @@ public class QuoteService {
         repository.save(quote);
         System.out.println("✅ Quote ID: " + quote.getId() + " successfully updated with prices!");
     }
+
+    public Quote getQuoteById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quote not found with ID: " + id));
+    }
 }
