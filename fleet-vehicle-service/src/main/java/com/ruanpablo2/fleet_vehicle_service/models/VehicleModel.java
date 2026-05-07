@@ -11,15 +11,19 @@ public class VehicleModel {
 
     private String name;
 
+    @Column(name = "fipe_code", unique = true)
+    private String fipeCode;
+
     @ManyToOne
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
     public VehicleModel() {}
 
-    public VehicleModel(String name, Brand brand) {
+    public VehicleModel(String name, Brand brand, String fipeCode) {
         this.name = name;
         this.brand = brand;
+        this.fipeCode = fipeCode;
     }
 
     public Long getId() {
@@ -36,6 +40,14 @@ public class VehicleModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFipeCode() {
+        return fipeCode;
+    }
+
+    public void setFipeCode(String fipeCode) {
+        this.fipeCode = fipeCode;
     }
 
     public Brand getBrand() {

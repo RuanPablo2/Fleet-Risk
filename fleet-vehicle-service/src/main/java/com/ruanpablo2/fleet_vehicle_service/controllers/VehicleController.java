@@ -30,17 +30,6 @@ public class VehicleController {
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/sync")
-    public ResponseEntity<String> syncFipeData() {
-        try {
-            vehicleService.startFullSync();
-            return ResponseEntity.ok("🚀 Synchronization has started! Follow the progress in the console logs.");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body("❌ Error starting synchronization: " + e.getMessage());
-        }
-    }
-
     @GetMapping("/models/search")
     public ResponseEntity<List<VehicleModelSearchDTO>> searchModels(@RequestParam("query") String query) {
         if (query == null || query.trim().length() < 2) {

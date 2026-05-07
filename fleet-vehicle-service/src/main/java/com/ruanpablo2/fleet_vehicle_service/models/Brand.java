@@ -18,6 +18,10 @@ public class Brand {
         this.code = code;
     }
 
+    public Brand(String name) {
+        this.name = name;
+    }
+
     @Column(unique = true)
     private String code;
 

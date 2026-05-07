@@ -25,38 +25,18 @@ public class VehicleService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final BrandRepository brandRepository;
     private final VehicleModelRepository vehicleModelRepository;
 
     public VehicleService(FipeClient fipeClient,
                           RedisTemplate<String, Object> redisTemplate,
                           ObjectMapper objectMapper,
                           RabbitTemplate rabbitTemplate,
-                          BrandRepository brandRepository,
                           VehicleModelRepository vehicleModelRepository) {
         this.fipeClient = fipeClient;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.rabbitTemplate = rabbitTemplate;
-        this.brandRepository = brandRepository;
         this.vehicleModelRepository = vehicleModelRepository;
-    }
-
-    public void startFullSync() {
-        System.out.println("🚀 Searching for brands on API Parallelum...");
-        List<BrandDTO> brands = fipeClient.getAllBrands();
-
-        for (BrandDTO dto : brands) {
-            Brand brand = brandRepository.findByCode(dto.code())
-                    .orElseGet(() -> brandRepository.save(new Brand(dto.name(), dto.code())));
-
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE_VEHICLE,
-                    RabbitMQConfig.ROUTING_KEY_SYNC_MODELS,
-                    brand.getId()
-            );
-        }
-        System.out.println("📬 All the brands have been sent to the processing queue!");
     }
 
     public VehicleFipeResponse getVehicleDetails(String fipeCode, String yearId) {
