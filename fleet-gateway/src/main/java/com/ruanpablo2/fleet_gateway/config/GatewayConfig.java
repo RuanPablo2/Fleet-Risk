@@ -21,7 +21,7 @@ public class GatewayConfig {
         System.out.println("🚦 [FLEET GATEWAY] Registering route for Quote Service: " + quoteServiceUrl);
 
         return route("quote-service-route")
-                .route(RequestPredicates.path("/api/quotes/**"), http())
+                .route(RequestPredicates.path("/api/v1/quotes/**"), http())
                 .before(uri(quoteServiceUrl))
                 .build();
     }
@@ -31,7 +31,7 @@ public class GatewayConfig {
         System.out.println("🚦 [FLEET GATEWAY] Registering route for Vehicle Service: " + vehicleServiceUrl);
 
         return route("vehicle-service-route")
-                .route(RequestPredicates.path("/api/vehicles/**"), http())
+                .route(RequestPredicates.path("/api/v1/vehicles/**"), http())
                 .before(uri(vehicleServiceUrl))
                 .build();
     }
