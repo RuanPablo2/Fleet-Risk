@@ -1,9 +1,6 @@
 package com.ruanpablo2.fleet_quote_service.services;
 
-import com.ruanpablo2.fleet_common.dtos.QuoteCreatedEventDTO;
-import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
-import com.ruanpablo2.fleet_common.dtos.QuoteVehicleEventDTO;
-import com.ruanpablo2.fleet_common.dtos.QuoteVehicleRequest;
+import com.ruanpablo2.fleet_common.dtos.*;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
@@ -68,5 +65,25 @@ public class QuoteService {
         );
 
         return savedQuote;
+    }
+
+    @Transactional
+    public void updateCalculatedPrices(QuoteCalculatedEventDTO event) {
+        Quote quote = repository.findById(event.quoteId())
+                .orElseThrow(() -> new RuntimeException("Quote not found: " + event.quoteId()));
+
+        quote.setTotalPremium(event.totalPremium());
+        quote.setStatus(QuoteStatus.CALCULATED);
+
+        for (QuoteVehicleCalculatedEventDTO vehicleEvent : event.vehicles()) {
+            for (QuoteVehicle vehicle : quote.getVehicles()) {
+                if (vehicle.getId().equals(vehicleEvent.vehicleId())) {
+                    vehicle.setCalculatedPremium(vehicleEvent.calculatedPremium());
+                }
+            }
+        }
+
+        repository.save(quote);
+        System.out.println("✅ Quote ID: " + quote.getId() + " successfully updated with prices!");
     }
 }

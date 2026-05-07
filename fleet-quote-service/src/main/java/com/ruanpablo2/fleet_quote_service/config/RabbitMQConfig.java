@@ -11,6 +11,8 @@ public class RabbitMQConfig {
     public static final String EXCHANGE_NAME = "fleet.quote.events";
     public static final String QUEUE_QUOTE_CREATED = "quote.created.queue";
     public static final String ROUTING_KEY_QUOTE_CREATED = "quote.created.key";
+    public static final String QUEUE_QUOTE_CALCULATED = "quote.calculated.queue";
+    public static final String ROUTING_KEY_QUOTE_CALCULATED = "quote.calculated.key";
 
     @Bean
     public DirectExchange quoteExchange() {
@@ -30,5 +32,15 @@ public class RabbitMQConfig {
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public Queue quoteCalculatedQueue() {
+        return new Queue(QUEUE_QUOTE_CALCULATED, true);
+    }
+
+    @Bean
+    public Binding bindingQuoteCalculated(Queue quoteCalculatedQueue, DirectExchange quoteExchange) {
+        return BindingBuilder.bind(quoteCalculatedQueue).to(quoteExchange).with(ROUTING_KEY_QUOTE_CALCULATED);
     }
 }
