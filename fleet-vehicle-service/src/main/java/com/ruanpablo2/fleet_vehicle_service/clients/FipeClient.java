@@ -16,7 +16,9 @@ public class FipeClient {
     private final RestClient restClient;
 
     public FipeClient(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl("https://parallelum.com.br/fipe/api/v2").build();
+        this.restClient = builder.baseUrl("https://parallelum.com.br/fipe/api/v2")
+                .defaultHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+                .build();
     }
 
     public VehicleFipeResponse fetchVehicleData(String fipeCode, String yearId) {

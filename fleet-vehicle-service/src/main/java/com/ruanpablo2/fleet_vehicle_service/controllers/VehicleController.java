@@ -18,7 +18,7 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
-    @GetMapping("/{fipeCode}/{yearId}")
+    @GetMapping("/{fipeCode}/years/{yearId}")
     public ResponseEntity<VehicleFipeResponse> getVehicle(@PathVariable String fipeCode, @PathVariable String yearId) {
         System.out.println("Received a request for: " + fipeCode + " year: " + yearId);
         VehicleFipeResponse response = vehicleService.getVehicleDetails(fipeCode, yearId);

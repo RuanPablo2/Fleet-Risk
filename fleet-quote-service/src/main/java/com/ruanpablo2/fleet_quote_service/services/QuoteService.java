@@ -33,7 +33,6 @@ public class QuoteService {
             vehicle.setLicensePlate(vehicleReq.licensePlate());
             vehicle.setFipeCode(vehicleReq.fipeCode());
             vehicle.setYearId(vehicleReq.yearId());
-            vehicle.setFipeValue(vehicleReq.fipeValue());
             vehicle.setCoverageLimit(vehicleReq.coverageLimit());
 
             quote.addVehicle(vehicle);
@@ -46,7 +45,6 @@ public class QuoteService {
                         v.getId(),
                         v.getFipeCode(),
                         v.getYearId(),
-                        v.getFipeValue(),
                         v.getCoverageLimit()
                 ))
                 .toList();

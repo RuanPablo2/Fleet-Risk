@@ -6,6 +6,5 @@ public record QuoteVehicleEventDTO(
         Long vehicleId,
         String fipeCode,
         String yearId,
-        BigDecimal fipeValue,
         BigDecimal coverageLimit
 ) {}

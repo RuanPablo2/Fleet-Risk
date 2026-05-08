@@ -15,9 +15,6 @@ public record QuoteVehicleRequest(
         @NotBlank(message = "Year ID is required")
         String yearId,
 
-        @NotNull(message = "FIPE value is required")
-        BigDecimal fipeValue,
-
         @NotNull(message = "Coverage limit is required")
         BigDecimal coverageLimit
 ) {}
