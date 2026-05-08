@@ -45,6 +45,13 @@ public class QuoteVehicle {
         this.quote = quote;
     }
 
+    public QuoteVehicle(String licensePlate, String fipeCode, String yearId, BigDecimal coverageLimit) {
+        this.licensePlate = licensePlate;
+        this.fipeCode = fipeCode;
+        this.yearId = yearId;
+        this.coverageLimit = coverageLimit;
+    }
+
     public Long getId() {
         return id;
     }

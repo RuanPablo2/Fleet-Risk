@@ -1,6 +1,7 @@
 package com.ruanpablo2.fleet_quote_service.controllers;
 
 import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
 import jakarta.validation.Valid;
@@ -27,5 +28,14 @@ public class QuoteController {
     public ResponseEntity<Quote> getQuote(@PathVariable Long id) {
         Quote quote = quoteService.getQuoteById(id);
         return ResponseEntity.ok(quote);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<QuoteResponse> updateQuote(
+            @PathVariable Long id,
+            @Valid @RequestBody QuoteRequest request) {
+
+        QuoteResponse response = quoteService.updateQuote(id, request);
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,7 @@
 package com.ruanpablo2.fleet_quote_service.services;
 
 import com.ruanpablo2.fleet_common.dtos.*;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
@@ -63,6 +64,51 @@ public class QuoteService {
         );
 
         return savedQuote;
+    }
+
+    @Transactional
+    public QuoteResponse updateQuote(Long id, QuoteRequest request) {
+        Quote quote = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quote not found: " + id));
+
+        quote.setCustomerName(request.customerName());
+        quote.setStatus(QuoteStatus.PENDING);
+        quote.setTotalPremium(null);
+
+        quote.getVehicles().clear();
+
+        request.vehicles().forEach(v -> {
+            QuoteVehicle vehicle = new QuoteVehicle(
+                    v.licensePlate(),
+                    v.fipeCode(),
+                    v.yearId(),
+                    v.coverageLimit()
+            );
+            quote.addVehicle(vehicle);
+        });
+
+        Quote savedQuote = repository.save(quote);
+
+        List<QuoteVehicleEventDTO> vehicleDTOs = savedQuote.getVehicles().stream()
+                .map(v -> new QuoteVehicleEventDTO(
+                        v.getId(),
+                        v.getFipeCode(),
+                        v.getYearId(),
+                        v.getCoverageLimit()
+                ))
+                .toList();
+
+        QuoteCreatedEventDTO event = new QuoteCreatedEventDTO(savedQuote.getId(), vehicleDTOs);
+        rabbitTemplate.convertAndSend("fleet.quote.events", "quote.created.key", event);
+
+        System.out.println("🔄 [RECALCULATION] Quote " + id + " updated and sent to Pricing Service.");
+
+        return new QuoteResponse(
+                savedQuote.getId(),
+                savedQuote.getCustomerName(),
+                savedQuote.getTotalPremium(),
+                savedQuote.getStatus().name()
+        );
     }
 
     @Transactional
