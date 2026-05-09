@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 public record QuoteResponse(
         Long id,
         String customerName,
+        String customerCnpj,
+        String brokerName,
         BigDecimal totalPremium,
         String status
 ) {}

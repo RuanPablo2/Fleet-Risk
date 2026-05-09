@@ -27,6 +27,8 @@ public class QuoteService {
     public Quote createInitialQuote(QuoteRequest request) {
         Quote quote = new Quote();
         quote.setCustomerName(request.customerName());
+        quote.setCustomerCnpj(request.customerCnpj());
+        quote.setBrokerName(request.brokerName());
         quote.setStatus(QuoteStatus.PENDING);
 
         for (QuoteVehicleRequest vehicleReq : request.vehicles()) {
@@ -72,6 +74,8 @@ public class QuoteService {
                 .orElseThrow(() -> new RuntimeException("Quote not found: " + id));
 
         quote.setCustomerName(request.customerName());
+        quote.setCustomerCnpj(request.customerCnpj());
+        quote.setBrokerName(request.brokerName());
         quote.setStatus(QuoteStatus.PENDING);
         quote.setTotalPremium(null);
 
@@ -106,6 +110,8 @@ public class QuoteService {
         return new QuoteResponse(
                 savedQuote.getId(),
                 savedQuote.getCustomerName(),
+                savedQuote.getCustomerCnpj(),
+                savedQuote.getBrokerName(),
                 savedQuote.getTotalPremium(),
                 savedQuote.getStatus().name()
         );
