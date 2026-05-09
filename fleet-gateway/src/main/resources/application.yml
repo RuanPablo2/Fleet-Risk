@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+jwt:
+  secret:46ab005d294acb42d46c3ae739046586f17cb158c07120fc3957eb30d621f34f
+
 spring:
   application:
     name: fleet-gateway
