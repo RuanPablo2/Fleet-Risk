@@ -5,6 +5,8 @@ import com.ruanpablo2.fleet_common.dtos.QuoteCalculatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteCreatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleCalculatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleEventDTO;
+import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
+import com.ruanpablo2.fleet_common.exceptions.IntegrationException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -41,7 +43,7 @@ public class PricingService {
             BigDecimal realFipeValue = BigDecimal.ZERO;
 
             try {
-                System.out.println("☁️ [FEIGN/REST] Fetching real price for FIPE: " + vehicle.fipeCode());
+                System.out.println("☁️ [REST-CLIENT] Fetching real price for FIPE: " + vehicle.fipeCode());
                 var fipeData = vehicleClient.getVehicleDetails(vehicle.fipeCode(), vehicle.yearId());
 
                 if (fipeData != null && fipeData.price() != null) {
@@ -56,8 +58,8 @@ public class PricingService {
                 System.err.println("🚨 [WARNING] Car not found in FIPE (404): " + vehicle.fipeCode());
                 realFipeValue = BigDecimal.ZERO;
             } catch (Exception e) {
-                System.err.println("🚨 [ERROR] Communication failure: " + e.getMessage());
-                realFipeValue = BigDecimal.ZERO;
+                System.err.println("🚨 [CRITICAL] Communication failure with Vehicle Service.");
+                throw new IntegrationException("Vehicle Service unavailable. RabbitMQ should requeue or DLQ this message.", "PRICING_502");
             }
 
             BigDecimal basePremium = realFipeValue.multiply(BASE_RATE);
@@ -100,7 +102,7 @@ public class PricingService {
             String[] parts = yearId.split("-");
             return Integer.parseInt(parts[0]);
         } catch (Exception e) {
-            return 2024;
+            throw new BusinessRuleException("Invalid year format received: " + yearId, "PRICING_422");
         }
     }
 }
