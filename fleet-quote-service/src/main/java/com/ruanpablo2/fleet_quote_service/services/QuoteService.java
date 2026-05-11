@@ -1,6 +1,8 @@
 package com.ruanpablo2.fleet_quote_service.services;
 
 import com.ruanpablo2.fleet_common.dtos.*;
+import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
+import com.ruanpablo2.fleet_common.exceptions.UnauthorizedAccessException;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
@@ -24,11 +26,12 @@ public class QuoteService {
     }
 
     @Transactional
-    public Quote createInitialQuote(QuoteRequest request) {
+    public Quote createInitialQuote(QuoteRequest request, String loggedBrokerName) {
         Quote quote = new Quote();
         quote.setCustomerName(request.customerName());
         quote.setCustomerCnpj(request.customerCnpj());
-        quote.setBrokerName(request.brokerName());
+
+        quote.setBrokerName(loggedBrokerName);
         quote.setStatus(QuoteStatus.PENDING);
 
         for (QuoteVehicleRequest vehicleReq : request.vehicles()) {
@@ -69,13 +72,16 @@ public class QuoteService {
     }
 
     @Transactional
-    public QuoteResponse updateQuote(Long id, QuoteRequest request) {
+    public QuoteResponse updateQuote(Long id, QuoteRequest request, String loggedBrokerName) {
         Quote quote = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quote not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + id, "QUOTE_404"));
+
+        if (!quote.getBrokerName().equals(loggedBrokerName)) {
+            throw new UnauthorizedAccessException("Access denied: You do not have permission to modify this quote.", "QUOTE_403");
+        }
 
         quote.setCustomerName(request.customerName());
         quote.setCustomerCnpj(request.customerCnpj());
-        quote.setBrokerName(request.brokerName());
         quote.setStatus(QuoteStatus.PENDING);
         quote.setTotalPremium(null);
 
@@ -120,7 +126,7 @@ public class QuoteService {
     @Transactional
     public void updateCalculatedPrices(QuoteCalculatedEventDTO event) {
         Quote quote = repository.findById(event.quoteId())
-                .orElseThrow(() -> new RuntimeException("Quote not found: " + event.quoteId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + event.quoteId(), "QUOTE_404"));
 
         quote.setTotalPremium(event.totalPremium());
         quote.setStatus(QuoteStatus.CALCULATED);
@@ -137,8 +143,14 @@ public class QuoteService {
         System.out.println("✅ Quote ID: " + quote.getId() + " successfully updated with prices!");
     }
 
-    public Quote getQuoteById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quote not found with ID: " + id));
+    public Quote getQuoteById(Long id, String loggedBrokerName) {
+        Quote quote = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + id, "QUOTE_404"));
+
+        if (!quote.getBrokerName().equals(loggedBrokerName)) {
+            throw new UnauthorizedAccessException("Access denied: You do not have permission to view this quote.", "QUOTE_403");
+        }
+
+        return quote;
     }
 }

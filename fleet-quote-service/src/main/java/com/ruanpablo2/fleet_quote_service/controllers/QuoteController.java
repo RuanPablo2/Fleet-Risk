@@ -20,22 +20,27 @@ public class QuoteController {
     }
 
     @PostMapping
-    public ResponseEntity<Quote> create(@Valid @RequestBody QuoteRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(quoteService.createInitialQuote(request));
+    public ResponseEntity<Quote> create(
+            @Valid @RequestBody QuoteRequest request,
+            @RequestHeader("X-Broker-Name") String brokerName) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(quoteService.createInitialQuote(request, brokerName));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Quote> getQuote(@PathVariable Long id) {
-        Quote quote = quoteService.getQuoteById(id);
+    public ResponseEntity<Quote> getQuote(
+            @PathVariable Long id,
+            @RequestHeader("X-Broker-Name") String brokerName) {
+        Quote quote = quoteService.getQuoteById(id, brokerName);
         return ResponseEntity.ok(quote);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<QuoteResponse> updateQuote(
             @PathVariable Long id,
-            @Valid @RequestBody QuoteRequest request) {
+            @Valid @RequestBody QuoteRequest request,
+            @RequestHeader("X-Broker-Name") String brokerName) {
 
-        QuoteResponse response = quoteService.updateQuote(id, request);
+        QuoteResponse response = quoteService.updateQuote(id, request, brokerName);
         return ResponseEntity.ok(response);
     }
 }
