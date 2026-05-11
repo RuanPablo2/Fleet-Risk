@@ -15,6 +15,7 @@ public class GatewayConfig {
 
     private final String quoteServiceUrl = "http://localhost:8081";
     private final String vehicleServiceUrl = "http://localhost:8082";
+    private final String authServiceUrl = "http://localhost:8090";
 
     @Bean
     public RouterFunction<ServerResponse> quoteRoute() {
@@ -33,6 +34,16 @@ public class GatewayConfig {
         return route("vehicle-service-route")
                 .route(RequestPredicates.path("/api/v1/vehicles/**"), http())
                 .before(uri(vehicleServiceUrl))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> authRoute() {
+        System.out.println("🚦 [FLEET GATEWAY] Registering route for Auth Service: " + authServiceUrl);
+
+        return route("auth-service-route")
+                .route(RequestPredicates.path("/api/v1/auth/**"), http())
+                .before(uri(authServiceUrl))
                 .build();
     }
 }
