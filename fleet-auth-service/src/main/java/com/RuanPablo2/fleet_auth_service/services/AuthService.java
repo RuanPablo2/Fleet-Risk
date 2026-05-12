@@ -1,5 +1,7 @@
 package com.RuanPablo2.fleet_auth_service.services;
 
+import com.RuanPablo2.fleet_auth_service.dtos.AuthUserResponse;
+import com.RuanPablo2.fleet_auth_service.dtos.RegisterRequest;
 import com.RuanPablo2.fleet_auth_service.models.User;
 import com.RuanPablo2.fleet_auth_service.repositories.UserRepository;
 import com.RuanPablo2.fleet_auth_service.security.JwtUtil;
@@ -27,17 +29,29 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
-    public User register(User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+    public AuthUserResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
             throw new BusinessRuleException("This e-mail is already registered.", "AUTH_422");
         }
 
-        if (userRepository.findByCnpj(user.getCnpj()).isPresent()) {
+        if (userRepository.findByCnpj(request.cnpj()).isPresent()) {
             throw new BusinessRuleException("This CNPJ is already registered.", "AUTH_422");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        User user = new User();
+        user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setBrokerName(request.brokerName());
+        user.setCnpj(request.cnpj());
+
+        User savedUser = userRepository.save(user);
+
+        return new AuthUserResponse(
+                savedUser.getId(),
+                savedUser.getEmail(),
+                savedUser.getBrokerName(),
+                savedUser.getCnpj()
+        );
     }
 
     public String login(String email, String password) {

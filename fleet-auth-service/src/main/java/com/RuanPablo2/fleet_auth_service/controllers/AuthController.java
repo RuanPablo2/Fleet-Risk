@@ -1,5 +1,8 @@
 package com.RuanPablo2.fleet_auth_service.controllers;
 
+import com.RuanPablo2.fleet_auth_service.dtos.AuthUserResponse;
+import com.RuanPablo2.fleet_auth_service.dtos.LoginRequest;
+import com.RuanPablo2.fleet_auth_service.dtos.RegisterRequest;
 import com.RuanPablo2.fleet_auth_service.models.User;
 import com.RuanPablo2.fleet_auth_service.services.AuthService;
 import jakarta.validation.Valid;
@@ -23,17 +26,14 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody User user) {
-        User savedUser = authService.register(user);
-
-        savedUser.setPassword(null);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    public ResponseEntity<AuthUserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthUserResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> credentials) {
-        String token = authService.login(credentials.get("email"), credentials.get("password"));
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
+        String token = authService.login(request.email(), request.password());
         return ResponseEntity.ok(Map.of("token", token));
     }
 }
