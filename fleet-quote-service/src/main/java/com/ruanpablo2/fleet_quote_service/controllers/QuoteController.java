@@ -43,4 +43,14 @@ public class QuoteController {
         QuoteResponse response = quoteService.updateQuote(id, request, brokerName);
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<Void> approveQuote(
+            @PathVariable Long id,
+            @RequestHeader("X-Broker-Name") String brokerName) {
+
+        quoteService.approveQuote(id, brokerName);
+
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -1,9 +1,12 @@
 package com.ruanpablo2.fleet_quote_service.services;
 
 import com.ruanpablo2.fleet_common.dtos.*;
+import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
 import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import com.ruanpablo2.fleet_common.exceptions.UnauthorizedAccessException;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteApprovedEventDTO;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
@@ -12,6 +15,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -152,5 +156,47 @@ public class QuoteService {
         }
 
         return quote;
+    }
+
+    @Transactional
+    public void approveQuote(Long id, String loggedBrokerName) {
+        Quote quote = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + id, "QUOTE_404"));
+
+        if (!quote.getBrokerName().equals(loggedBrokerName)) {
+            throw new UnauthorizedAccessException("Access denied: You do not have permission to modify this quote.", "QUOTE_403");
+        }
+
+        if (quote.getStatus() != QuoteStatus.CALCULATED) {
+            throw new BusinessRuleException("Cannot approve a quote that is not in CALCULATED status.", "QUOTE_422");
+        }
+
+        quote.setStatus(QuoteStatus.APPROVED);
+        repository.save(quote);
+
+        BigDecimal totalFipeCalculated = BigDecimal.ZERO;
+
+        List<QuoteVehicleApprovedDTO> vehicleDTOs = quote.getVehicles().stream().map(v -> {
+            return new QuoteVehicleApprovedDTO(
+                    "Cód. FIPE: " + v.getFipeCode(), // Temporary until we enrich the data
+                    v.getYearId(),
+                    v.getLicensePlate(),
+                    BigDecimal.ZERO,
+                    v.getCalculatedPremium()
+            );
+        }).toList();
+
+        QuoteApprovedEventDTO event = new QuoteApprovedEventDTO(
+                quote.getId(),
+                quote.getCustomerName(),
+                quote.getCustomerCnpj(),
+                quote.getBrokerName(),
+                quote.getTotalPremium(),
+                totalFipeCalculated,
+                vehicleDTOs
+        );
+
+        System.out.println("✅ [QUOTE SERVICE] Quote " + id + " approved! Sending event to Document Service...");
+        rabbitTemplate.convertAndSend("fleet.quote.events", "quote.approved.key", event);
     }
 }

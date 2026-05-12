@@ -4,6 +4,6 @@ public enum QuoteStatus {
     PENDING,
     PROCESSING,
     CALCULATED,
-    COMPLETED,
+    APPROVED,
     ERROR
 }
