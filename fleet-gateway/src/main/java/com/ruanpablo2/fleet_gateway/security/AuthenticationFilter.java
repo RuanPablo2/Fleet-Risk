@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -45,22 +47,24 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String brokerName = jwtUtil.extractBrokerName(token);
+        String rawBrokerName = jwtUtil.extractBrokerName(token);
         String cnpj = jwtUtil.extractCnpj(token);
 
-        System.out.println("🔐 [GATEWAY] Token validated! Forwarding broker's request: " + brokerName);
+        String safeBrokerName = URLEncoder.encode(rawBrokerName, StandardCharsets.UTF_8);
+
+        System.out.println("🔐 [GATEWAY] Token validated! Forwarding broker's request: " + rawBrokerName);
 
         HttpServletRequestWrapper mutatedRequest = new HttpServletRequestWrapper(request) {
             @Override
             public String getHeader(String name) {
-                if ("X-Broker-Name".equalsIgnoreCase(name)) return brokerName;
+                if ("X-Broker-Name".equalsIgnoreCase(name)) return safeBrokerName;
                 if ("X-Broker-Cnpj".equalsIgnoreCase(name)) return cnpj;
                 return super.getHeader(name);
             }
 
             @Override
             public Enumeration<String> getHeaders(String name) {
-                if ("X-Broker-Name".equalsIgnoreCase(name)) return Collections.enumeration(List.of(brokerName));
+                if ("X-Broker-Name".equalsIgnoreCase(name)) return Collections.enumeration(List.of(safeBrokerName));
                 if ("X-Broker-Cnpj".equalsIgnoreCase(name)) return Collections.enumeration(List.of(cnpj));
                 return super.getHeaders(name);
             }
