@@ -12,7 +12,7 @@ public class RestClientConfig {
 
     @Bean
     public VehicleClient vehicleClient() {
-        RestClient restClient = RestClient.builder().baseUrl("http://localhost:8083").build();
+        RestClient restClient = RestClient.builder().baseUrl("http://localhost:8082/api/v1/vehicles").build();
         RestClientAdapter adapter = RestClientAdapter.create(restClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
 

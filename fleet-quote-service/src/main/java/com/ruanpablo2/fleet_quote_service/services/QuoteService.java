@@ -49,6 +49,8 @@ public class QuoteService {
             vehicle.setYearId(vehicleReq.yearId());
             vehicle.setCoverageLimit(vehicleReq.coverageLimit());
 
+            enrichVehicleWithFipeData(vehicle);
+
             quote.addVehicle(vehicle);
         }
 
@@ -96,12 +98,15 @@ public class QuoteService {
         quote.getVehicles().clear();
 
         request.vehicles().forEach(v -> {
-            QuoteVehicle vehicle = new QuoteVehicle(
-                    v.licensePlate(),
-                    v.fipeCode(),
-                    v.yearId(),
-                    v.coverageLimit()
-            );
+            QuoteVehicle vehicle = new QuoteVehicle();
+
+            vehicle.setLicensePlate(v.licensePlate());
+            vehicle.setFipeCode(v.fipeCode());
+            vehicle.setYearId(v.yearId());
+            vehicle.setCoverageLimit(v.coverageLimit());
+
+            enrichVehicleWithFipeData(vehicle);
+
             quote.addVehicle(vehicle);
         });
 
@@ -182,31 +187,16 @@ public class QuoteService {
         List<QuoteVehicleApprovedDTO> vehicleDTOs = new ArrayList<>();
 
         for (QuoteVehicle v : quote.getVehicles()) {
-            String finalModelName = "Veículo (" + v.getFipeCode() + ")";
-            BigDecimal realFipeValue = BigDecimal.ZERO;
+            BigDecimal fipeValue = v.getFipeValue() != null ? v.getFipeValue() : BigDecimal.ZERO;
+            totalFipeCalculated = totalFipeCalculated.add(fipeValue);
 
-            try {
-                System.out.println("☁️ [REST-CLIENT] Seeking data from FIPE to enrich the PDF: " + v.getFipeCode());
-                var fipeData = vehicleClient.getVehicleDetails(v.getFipeCode(), v.getYearId());
-
-                if (fipeData != null) {
-                    finalModelName = fipeData.model() + " (" + v.getFipeCode() + ")";
-                    if (fipeData.price() != null) {
-                        String cleanPrice = fipeData.price().replace("R$", "").replace(".", "").replace(",", ".").trim();
-                        realFipeValue = new BigDecimal(cleanPrice);
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("🚨 Warning: Failed to enrich FIPE data for PDF. Using fallback.");
-            }
-
-            totalFipeCalculated = totalFipeCalculated.add(realFipeValue);
+            String displayName = v.getModelName() != null ? v.getModelName() : "Vehicle (" + v.getFipeCode() + ")";
 
             vehicleDTOs.add(new QuoteVehicleApprovedDTO(
-                    finalModelName,
+                    displayName,
                     v.getYearId(),
                     v.getLicensePlate(),
-                    realFipeValue,
+                    fipeValue,
                     v.getCalculatedPremium()
             ));
         }
@@ -223,5 +213,25 @@ public class QuoteService {
 
         System.out.println("✅ [QUOTE SERVICE] Quote " + id + " approved! Sending event to Document Service...");
         rabbitTemplate.convertAndSend("fleet.quote.events", "quote.approved.key", event);
+    }
+
+    private void enrichVehicleWithFipeData(QuoteVehicle vehicle) {
+        try {
+            System.out.println("☁️ [REST-CLIENT] Fetching FIPE data to freeze value for quote: " + vehicle.getFipeCode());
+            var fipeData = vehicleClient.getVehicleDetails(vehicle.getFipeCode(), vehicle.getYearId());
+
+            if (fipeData != null) {
+                vehicle.setModelName(fipeData.model() + " (" + vehicle.getFipeCode() + ")");
+
+                if (fipeData.price() != null) {
+                    String cleanPrice = fipeData.price().replace("R$", "").replace(".", "").replace(",", ".").trim();
+                    vehicle.setFipeValue(new BigDecimal(cleanPrice));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("🚨 Error fetching FIPE data: " + e.getMessage());
+            vehicle.setModelName("Vehicle (" + vehicle.getFipeCode() + ")");
+            vehicle.setFipeValue(BigDecimal.ZERO);
+        }
     }
 }

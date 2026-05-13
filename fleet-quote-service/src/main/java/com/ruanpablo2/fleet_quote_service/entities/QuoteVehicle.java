@@ -16,6 +16,7 @@ public class QuoteVehicle {
     private String licensePlate;
     private String fipeCode;
     private String yearId;
+    private String modelName;
 
     @Column(precision = 19, scale = 2)
     private BigDecimal fipeValue;
@@ -34,22 +35,16 @@ public class QuoteVehicle {
     public QuoteVehicle() {
     }
 
-    public QuoteVehicle(Long id, String licensePlate, String fipeCode, String yearId, BigDecimal fipeValue, BigDecimal coverageLimit, BigDecimal calculatedPremium, Quote quote) {
+    public QuoteVehicle(Long id, String licensePlate, String fipeCode, String yearId, String modelName, BigDecimal fipeValue, BigDecimal coverageLimit, BigDecimal calculatedPremium, Quote quote) {
         this.id = id;
         this.licensePlate = licensePlate;
         this.fipeCode = fipeCode;
         this.yearId = yearId;
+        this.modelName = modelName;
         this.fipeValue = fipeValue;
         this.coverageLimit = coverageLimit;
         this.calculatedPremium = calculatedPremium;
         this.quote = quote;
-    }
-
-    public QuoteVehicle(String licensePlate, String fipeCode, String yearId, BigDecimal coverageLimit) {
-        this.licensePlate = licensePlate;
-        this.fipeCode = fipeCode;
-        this.yearId = yearId;
-        this.coverageLimit = coverageLimit;
     }
 
     public Long getId() {
@@ -82,6 +77,14 @@ public class QuoteVehicle {
 
     public void setYearId(String yearId) {
         this.yearId = yearId;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     public BigDecimal getFipeValue() {
