@@ -4,6 +4,7 @@ import com.ruanpablo2.fleet_common.dtos.*;
 import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
 import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import com.ruanpablo2.fleet_common.exceptions.UnauthorizedAccessException;
+import com.ruanpablo2.fleet_quote_service.clients.VehicleClient;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteApprovedEventDTO;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,10 +25,12 @@ public class QuoteService {
 
     private final QuoteRepository repository;
     private final RabbitTemplate rabbitTemplate;
+    private final VehicleClient vehicleClient;
 
-    public QuoteService(QuoteRepository repository, RabbitTemplate rabbitTemplate) {
+    public QuoteService(QuoteRepository repository, RabbitTemplate rabbitTemplate, VehicleClient vehicleClient) {
         this.repository = repository;
         this.rabbitTemplate = rabbitTemplate;
+        this.vehicleClient = vehicleClient;
     }
 
     @Transactional
@@ -175,16 +179,37 @@ public class QuoteService {
         repository.save(quote);
 
         BigDecimal totalFipeCalculated = BigDecimal.ZERO;
+        List<QuoteVehicleApprovedDTO> vehicleDTOs = new ArrayList<>();
 
-        List<QuoteVehicleApprovedDTO> vehicleDTOs = quote.getVehicles().stream().map(v -> {
-            return new QuoteVehicleApprovedDTO(
-                    "Cód. FIPE: " + v.getFipeCode(), // Temporary until we enrich the data
+        for (QuoteVehicle v : quote.getVehicles()) {
+            String finalModelName = "Veículo (" + v.getFipeCode() + ")";
+            BigDecimal realFipeValue = BigDecimal.ZERO;
+
+            try {
+                System.out.println("☁️ [REST-CLIENT] Seeking data from FIPE to enrich the PDF: " + v.getFipeCode());
+                var fipeData = vehicleClient.getVehicleDetails(v.getFipeCode(), v.getYearId());
+
+                if (fipeData != null) {
+                    finalModelName = fipeData.model() + " (" + v.getFipeCode() + ")";
+                    if (fipeData.price() != null) {
+                        String cleanPrice = fipeData.price().replace("R$", "").replace(".", "").replace(",", ".").trim();
+                        realFipeValue = new BigDecimal(cleanPrice);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("🚨 Warning: Failed to enrich FIPE data for PDF. Using fallback.");
+            }
+
+            totalFipeCalculated = totalFipeCalculated.add(realFipeValue);
+
+            vehicleDTOs.add(new QuoteVehicleApprovedDTO(
+                    finalModelName,
                     v.getYearId(),
                     v.getLicensePlate(),
-                    BigDecimal.ZERO,
+                    realFipeValue,
                     v.getCalculatedPremium()
-            );
-        }).toList();
+            ));
+        }
 
         QuoteApprovedEventDTO event = new QuoteApprovedEventDTO(
                 quote.getId(),
