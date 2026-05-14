@@ -4,8 +4,11 @@ package com.RuanPablo2.fleet_document_service.services;
 import com.RuanPablo2.fleet_document_service.dtos.QuoteApprovedEventDTO;
 import com.lowagie.text.pdf.BaseFont;
 import com.ruanpablo2.fleet_common.dtos.DocumentGeneratedEventDTO;
+import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -91,5 +94,17 @@ public class DocumentService {
             System.err.println("❌ [DOCUMENT] Error generating PDF: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public Resource getProposalResource(Long quoteId) {
+        String fileName = "Proposta" + quoteId + ".pdf";
+        File pdfFile = new File(fileName);
+
+        if (!pdfFile.exists()) {
+            System.err.println("🚨 [DOCUMENT] Download failed: File not found for Quote ID " + quoteId);
+            throw new ResourceNotFoundException("Proposal file not found for Quote ID: " + quoteId, "DOC_404");
+        }
+
+        return new FileSystemResource(pdfFile);
     }
 }

@@ -55,40 +55,14 @@ public class QuoteService {
         }
 
         Quote savedQuote = repository.save(quote);
-
-        List<QuoteVehicleEventDTO> vehicleEvents = savedQuote.getVehicles().stream()
-                .map(v -> new QuoteVehicleEventDTO(
-                        v.getId(),
-                        v.getFipeCode(),
-                        v.getYearId(),
-                        v.getCoverageLimit()
-                ))
-                .toList();
-
-        QuoteCreatedEventDTO event = new QuoteCreatedEventDTO(
-                savedQuote.getId(),
-                vehicleEvents
-        );
-
-        System.out.println("📤 Publishing calculation request for Quote ID: " + savedQuote.getId() + " | Fleet size: " + vehicleEvents.size());
-
-        rabbitTemplate.convertAndSend(
-                "fleet.quote.events",
-                "quote.created.key",
-                event
-        );
+        System.out.println("💾 [QUOTE SERVICE] Quote saved as draft for: " + savedQuote.getCustomerName());
 
         return savedQuote;
     }
 
     @Transactional
     public QuoteResponse updateQuote(Long id, QuoteRequest request, String loggedBrokerName) {
-        Quote quote = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + id, "QUOTE_404"));
-
-        if (!quote.getBrokerName().equals(loggedBrokerName)) {
-            throw new UnauthorizedAccessException("Access denied: You do not have permission to modify this quote.", "QUOTE_403");
-        }
+        Quote quote = getQuoteById(id, loggedBrokerName);
 
         quote.setCustomerName(request.customerName());
         quote.setCustomerCnpj(request.customerCnpj());
@@ -99,7 +73,6 @@ public class QuoteService {
 
         request.vehicles().forEach(v -> {
             QuoteVehicle vehicle = new QuoteVehicle();
-
             vehicle.setLicensePlate(v.licensePlate());
             vehicle.setFipeCode(v.fipeCode());
             vehicle.setYearId(v.yearId());
@@ -111,20 +84,7 @@ public class QuoteService {
         });
 
         Quote savedQuote = repository.save(quote);
-
-        List<QuoteVehicleEventDTO> vehicleDTOs = savedQuote.getVehicles().stream()
-                .map(v -> new QuoteVehicleEventDTO(
-                        v.getId(),
-                        v.getFipeCode(),
-                        v.getYearId(),
-                        v.getCoverageLimit()
-                ))
-                .toList();
-
-        QuoteCreatedEventDTO event = new QuoteCreatedEventDTO(savedQuote.getId(), vehicleDTOs);
-        rabbitTemplate.convertAndSend("fleet.quote.events", "quote.created.key", event);
-
-        System.out.println("🔄 [RECALCULATION] Quote " + id + " updated and sent to Pricing Service.");
+        System.out.println("🔄 [QUOTE SERVICE] Draft updated for Quote ID: " + id);
 
         return new QuoteResponse(
                 savedQuote.getId(),
@@ -134,6 +94,27 @@ public class QuoteService {
                 savedQuote.getTotalPremium(),
                 savedQuote.getStatus().name()
         );
+    }
+
+    @Transactional
+    public void calculateQuote(Long id, QuoteRequest request, String loggedBrokerName) {
+        updateQuote(id, request, loggedBrokerName);
+
+        Quote quote = repository.findById(id).orElseThrow();
+
+        List<QuoteVehicleEventDTO> vehicleEvents = quote.getVehicles().stream()
+                .map(v -> new QuoteVehicleEventDTO(
+                        v.getId(),
+                        v.getFipeCode(),
+                        v.getYearId(),
+                        v.getCoverageLimit()
+                ))
+                .toList();
+
+        QuoteCreatedEventDTO event = new QuoteCreatedEventDTO(quote.getId(), vehicleEvents);
+
+        System.out.println("📤 [QUOTE SERVICE] Requesting calculation for Quote ID: " + id);
+        rabbitTemplate.convertAndSend("fleet.quote.events", "quote.created.key", event);
     }
 
     @Transactional
@@ -153,7 +134,7 @@ public class QuoteService {
         }
 
         repository.save(quote);
-        System.out.println("✅ Quote ID: " + quote.getId() + " successfully updated with prices!");
+        System.out.println("✅ [QUOTE SERVICE] Quote ID: " + quote.getId() + " successfully updated with prices!");
     }
 
     public Quote getQuoteById(Long id, String loggedBrokerName) {
@@ -169,12 +150,7 @@ public class QuoteService {
 
     @Transactional
     public void approveQuote(Long id, String loggedBrokerName) {
-        Quote quote = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Quote not found with ID: " + id, "QUOTE_404"));
-
-        if (!quote.getBrokerName().equals(loggedBrokerName)) {
-            throw new UnauthorizedAccessException("Access denied: You do not have permission to modify this quote.", "QUOTE_403");
-        }
+        Quote quote = getQuoteById(id, loggedBrokerName);
 
         if (quote.getStatus() != QuoteStatus.CALCULATED) {
             throw new BusinessRuleException("Cannot approve a quote that is not in CALCULATED status.", "QUOTE_422");
@@ -183,6 +159,21 @@ public class QuoteService {
         quote.setStatus(QuoteStatus.APPROVED);
         repository.save(quote);
 
+        publishDocumentEvent(quote);
+    }
+
+    public void resendDocument(Long id, String loggedBrokerName) {
+        Quote quote = getQuoteById(id, loggedBrokerName);
+
+        if (quote.getStatus() != QuoteStatus.APPROVED) {
+            throw new BusinessRuleException("Cannot resend document for a quote that is not APPROVED.", "QUOTE_422");
+        }
+
+        System.out.println("🔄 [QUOTE SERVICE] Resending document event for Quote ID: " + id);
+        publishDocumentEvent(quote);
+    }
+
+    private void publishDocumentEvent(Quote quote) {
         BigDecimal totalFipeCalculated = BigDecimal.ZERO;
         List<QuoteVehicleApprovedDTO> vehicleDTOs = new ArrayList<>();
 
@@ -211,7 +202,7 @@ public class QuoteService {
                 vehicleDTOs
         );
 
-        System.out.println("✅ [QUOTE SERVICE] Quote " + id + " approved! Sending event to Document Service...");
+        System.out.println("✅ [QUOTE SERVICE] Event sent to Document Service for Quote " + quote.getId());
         rabbitTemplate.convertAndSend("fleet.quote.events", "quote.approved.key", event);
     }
 

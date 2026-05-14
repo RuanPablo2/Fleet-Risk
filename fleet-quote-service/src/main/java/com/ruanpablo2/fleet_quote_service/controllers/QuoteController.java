@@ -42,7 +42,7 @@ public class QuoteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuoteResponse> updateQuote(
+    public ResponseEntity<QuoteResponse> saveDraft(
             @PathVariable Long id,
             @Valid @RequestBody QuoteRequest request,
             @RequestHeader("X-Broker-Name") String encodedBrokerName) {
@@ -50,6 +50,17 @@ public class QuoteController {
         String brokerName = decodeHeader(encodedBrokerName);
         QuoteResponse response = quoteService.updateQuote(id, request, brokerName);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/calculate")
+    public ResponseEntity<Void> calculate(
+            @PathVariable Long id,
+            @Valid @RequestBody QuoteRequest request,
+            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+
+        String brokerName = decodeHeader(encodedBrokerName);
+        quoteService.calculateQuote(id, request, brokerName);
+        return ResponseEntity.accepted().build();
     }
 
     @PatchMapping("/{id}/approve")
@@ -61,6 +72,17 @@ public class QuoteController {
         quoteService.approveQuote(id, brokerName);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/resend-document")
+    public ResponseEntity<Void> resendDocument(
+            @PathVariable Long id,
+            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+
+        String brokerName = decodeHeader(encodedBrokerName);
+        quoteService.resendDocument(id, brokerName);
+
+        return ResponseEntity.accepted().build();
     }
 
     private String decodeHeader(String encodedValue) {
