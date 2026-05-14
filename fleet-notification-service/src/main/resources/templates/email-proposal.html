@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+        .container { width: 100%; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .header { background-color: #1a237e; color: #ffffff; padding: 20px; text-align: center; }
+        .content { padding: 30px; background-color: #ffffff; }
+        .quote-box { background-color: #f5f5f5; border-left: 5px solid #1a237e; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .footer { background-color: #f9f9f9; color: #777; padding: 20px; text-align: center; font-size: 12px; }
+        .highlight { color: #1a237e; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 style="margin:0;">FleetRisk</h1>
+        <p style="margin:5px 0 0 0; font-size: 14px; opacity: 0.8;">Smart Fleet Management</p>
+    </div>
+    <div class="content">
+        <h2>Olá, Corretor!</h2>
+        <p>A <strong>Proposta Comercial</strong> referente à cotação <span class="highlight" th:text="'#' + ${quoteId}">#000</span> foi gerada com sucesso.</p>
+
+        <p>Este documento contempla o <strong> os cenários</strong> solicitados para a frota do cliente:</p>
+
+        <div class="quote-box">
+            <strong>Segurado:</strong> <span th:text="${customerName}">Nome do Cliente</span><br>
+            <strong>ID da Cotação:</strong> <span th:text="${quoteId}">000</span>
+        </div>
+
+        <p>O arquivo PDF encontra-se anexado a este e-mail para sua conferência e apresentação.</p>
+
+        <p style="font-size: 14px; color: #666; border-top: 1px solid #eee; padding-top: 15px;">
+            <i><b>Importante:</b> Lembramos que este documento é uma Proposta. A <b>Apólice</b> será emitida somente após o aceite formal. Alterações posteriores à vigência serão tratadas via <b>Endosso</b>.</i>
+        </p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2026 FleetRisk Cloud Services. Todos os direitos reservados.</p>
+        <p>Desenvolvido por Ruan Pablo | Java Developer</p>
+    </div>
+</div>
+</body>
+</html>

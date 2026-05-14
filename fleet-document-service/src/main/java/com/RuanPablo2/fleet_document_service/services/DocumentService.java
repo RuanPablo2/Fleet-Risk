@@ -3,6 +3,8 @@ package com.RuanPablo2.fleet_document_service.services;
 
 import com.RuanPablo2.fleet_document_service.dtos.QuoteApprovedEventDTO;
 import com.lowagie.text.pdf.BaseFont;
+import com.ruanpablo2.fleet_common.dtos.DocumentGeneratedEventDTO;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
@@ -10,6 +12,7 @@ import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -20,9 +23,11 @@ import java.util.Locale;
 public class DocumentService {
 
     private final TemplateEngine templateEngine;
+    private final RabbitTemplate rabbitTemplate;
 
-    public DocumentService(TemplateEngine templateEngine) {
+    public DocumentService(TemplateEngine templateEngine, RabbitTemplate rabbitTemplate) {
         this.templateEngine = templateEngine;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public void generatePdf(QuoteApprovedEventDTO event) {
@@ -63,12 +68,24 @@ public class DocumentService {
             renderer.layout();
             renderer.createPDF(outputStream);
 
-            String fileName = "Cotacao" + event.quoteId() + ".pdf";
+            String fileName = "Proposta" + event.quoteId() + ".pdf";
             try (FileOutputStream fos = new FileOutputStream(fileName)) {
                 fos.write(outputStream.toByteArray());
             }
 
             System.out.println("✅ [DOCUMENT] PDF successfully generated and saved locally: " + fileName);
+
+            String absolutePath = new File(fileName).getAbsolutePath();
+
+            DocumentGeneratedEventDTO notificationEvent = new DocumentGeneratedEventDTO(
+                    event.quoteId(),
+                    "ruanpablo2.dev@gmail.com",
+                    event.customerName(),
+                    absolutePath
+            );
+
+            rabbitTemplate.convertAndSend("fleet.document.events", "document.generated.key", notificationEvent);
+            System.out.println("📤 [DOCUMENT] Event sent to Notification Service.");
 
         } catch (Exception e) {
             System.err.println("❌ [DOCUMENT] Error generating PDF: " + e.getMessage());

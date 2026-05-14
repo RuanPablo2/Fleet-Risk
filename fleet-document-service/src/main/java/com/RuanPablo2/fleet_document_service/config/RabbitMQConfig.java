@@ -11,6 +11,7 @@ public class RabbitMQConfig {
     public static final String QUEUE_DOCUMENT_GENERATE = "fleet.document.generate.queue";
     public static final String EXCHANGE_QUOTE = "fleet.quote.events";
     public static final String ROUTING_KEY_APPROVED = "quote.approved.key";
+    public static final String EXCHANGE_DOCUMENT = "fleet.document.events";
 
     @Bean
     public Queue documentQueue() {
@@ -27,6 +28,11 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(documentQueue)
                 .to(quoteExchange)
                 .with(ROUTING_KEY_APPROVED);
+    }
+
+    @Bean
+    public DirectExchange documentExchange() {
+        return new DirectExchange(EXCHANGE_DOCUMENT);
     }
 
     @Bean
