@@ -20,6 +20,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
+    private static final List<String> OPEN_ENDPOINTS = List.of(
+            "/api/v1/auth",
+            "/v3/api-docs",
+            "/swagger-ui",
+            "/swagger-resources",
+            "/webjars"
+    );
+
     public AuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
@@ -28,7 +36,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (request.getRequestURI().startsWith("/api/v1/auth")) {
+        String uri = request.getRequestURI();
+
+        boolean isPublicRoute = OPEN_ENDPOINTS.stream().anyMatch(uri::startsWith) || uri.contains("/v3/api-docs");
+
+        if (isPublicRoute) {
             filterChain.doFilter(request, response);
             return;
         }
