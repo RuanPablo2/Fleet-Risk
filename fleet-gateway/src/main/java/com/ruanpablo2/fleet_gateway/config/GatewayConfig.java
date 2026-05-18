@@ -1,5 +1,6 @@
 package com.ruanpablo2.fleet_gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RequestPredicates;
@@ -13,10 +14,17 @@ import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFuncti
 @Configuration
 public class GatewayConfig {
 
-    private final String quoteServiceUrl = "http://localhost:8081";
-    private final String vehicleServiceUrl = "http://localhost:8082";
-    private final String authServiceUrl = "http://localhost:8090";
-    private final String documentServiceUrl = "http://localhost:8084";
+    @Value("${QUOTE_SERVICE_URL:http://localhost:8081}")
+    private String quoteServiceUrl;
+
+    @Value("${VEHICLE_SERVICE_URL:http://localhost:8082}")
+    private String vehicleServiceUrl;
+
+    @Value("${AUTH_SERVICE_URL:http://localhost:8090}")
+    private String authServiceUrl;
+
+    @Value("${DOCUMENT_SERVICE_URL:http://localhost:8084}")
+    private String documentServiceUrl;
 
     @Bean
     public RouterFunction<ServerResponse> quoteRoute() {

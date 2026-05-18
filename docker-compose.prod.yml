@@ -1,0 +1,173 @@
+name: fleetrisk
+version: '3.8'
+
+services:
+  # ==========================================
+  # INFRASTRUCTURE
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: fleet-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: fleet_auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - fleet-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: fleet-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - fleet-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: fleet-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    networks:
+      - fleet-network
+
+  # ==========================================
+  # MICROSERVICES
+  # ==========================================
+  api-gateway:
+    build: ./fleet-gateway
+    container_name: fleet-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_PROFILE=prod
+      - JWT_SECRET=${JWT_SECRET}
+      - QUOTE_SERVICE_URL=http://fleet-quote-service:8081
+      - VEHICLE_SERVICE_URL=http://fleet-vehicle-service:8082
+      - AUTH_SERVICE_URL=http://fleet-auth-service:8090
+      - DOCUMENT_SERVICE_URL=http://fleet-document-service:8084
+    depends_on:
+      - fleet-auth-service
+      - fleet-quote-service
+    networks:
+      - fleet-network
+
+  fleet-auth-service:
+    build: ./fleet-auth-service
+    container_name: fleet-auth-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://fleet-db:5432/fleet_auth_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - fleet-network
+
+  fleet-quote-service:
+    build: ./fleet-quote-service
+    container_name: fleet-quote-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://fleet-db:5432/fleet_quote_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_RABBITMQ_HOST=fleet-rabbitmq
+      - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - fleet-network
+
+  fleet-vehicle-service:
+    build: ./fleet-vehicle-service
+    container_name: fleet-vehicle-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://fleet-db:5432/fleet_vehicle_db
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_RABBITMQ_HOST=fleet-rabbitmq
+      - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=fleet-redis
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - fleet-network
+
+  fleet-pricing-service:
+    build: ./fleet-pricing-service
+    container_name: fleet-pricing-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - SPRING_RABBITMQ_HOST=fleet-rabbitmq
+      - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+    depends_on:
+      - rabbitmq
+      - fleet-vehicle-service
+    networks:
+      - fleet-network
+
+  fleet-document-service:
+    build: ./fleet-document-service
+    container_name: fleet-document-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - SPRING_RABBITMQ_HOST=fleet-rabbitmq
+      - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+    depends_on:
+      - rabbitmq
+    networks:
+      - fleet-network
+
+  fleet-notification-service:
+    build: ./fleet-notification-service
+    container_name: fleet-notification-service
+    restart: always
+    environment:
+      - APP_PROFILE=prod
+      - SPRING_RABBITMQ_HOST=fleet-rabbitmq
+      - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+    depends_on:
+      - rabbitmq
+    networks:
+      - fleet-network
+
+networks:
+  fleet-network:
+    driver: bridge
+
+volumes:
+  pgdata:

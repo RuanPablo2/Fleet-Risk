@@ -3,7 +3,6 @@ package com.RuanPablo2.fleet_auth_service.controllers;
 import com.RuanPablo2.fleet_auth_service.dtos.AuthUserResponse;
 import com.RuanPablo2.fleet_auth_service.dtos.LoginRequest;
 import com.RuanPablo2.fleet_auth_service.dtos.RegisterRequest;
-import com.RuanPablo2.fleet_auth_service.models.User;
 import com.RuanPablo2.fleet_auth_service.services.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
