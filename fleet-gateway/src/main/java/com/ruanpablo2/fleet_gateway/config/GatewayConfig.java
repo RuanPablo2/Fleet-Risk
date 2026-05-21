@@ -3,6 +3,8 @@ package com.ruanpablo2.fleet_gateway.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
@@ -12,19 +14,28 @@ import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouter
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
 
 @Configuration
-public class GatewayConfig {
+public class GatewayConfig implements WebMvcConfigurer {
 
-    @Value("${QUOTE_SERVICE_URL:http://localhost:8081}")
+    @Value("${route.quote.url}")
     private String quoteServiceUrl;
 
-    @Value("${VEHICLE_SERVICE_URL:http://localhost:8082}")
+    @Value("${route.vehicle.url}")
     private String vehicleServiceUrl;
 
-    @Value("${AUTH_SERVICE_URL:http://localhost:8090}")
+    @Value("${route.auth.url}")
     private String authServiceUrl;
 
-    @Value("${DOCUMENT_SERVICE_URL:http://localhost:8084}")
+    @Value("${route.document.url}")
     private String documentServiceUrl;
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:4200")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+    }
 
     @Bean
     public RouterFunction<ServerResponse> quoteRoute() {
