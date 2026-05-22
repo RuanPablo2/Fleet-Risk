@@ -13,6 +13,8 @@ import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,6 +137,20 @@ public class QuoteService {
 
         repository.save(quote);
         System.out.println("✅ [QUOTE SERVICE] Quote ID: " + quote.getId() + " successfully updated with prices!");
+    }
+
+    public Page<QuoteResponse> listQuotes(String loggedBrokerName, Pageable pageable) {
+        System.out.println("📊 [QUOTE SERVICE] Listing quotes for broker: " + loggedBrokerName);
+
+        return repository.findByBrokerNameOrderByCreatedAtDesc(loggedBrokerName, pageable)
+                .map(quote -> new QuoteResponse(
+                        quote.getId(),
+                        quote.getCustomerName(),
+                        quote.getCustomerCnpj(),
+                        quote.getBrokerName(),
+                        quote.getTotalPremium(),
+                        quote.getStatus().name()
+                ));
     }
 
     public Quote getQuoteById(Long id, String loggedBrokerName) {

@@ -5,6 +5,9 @@ import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +23,19 @@ public class QuoteController {
 
     public QuoteController(QuoteService service) {
         this.quoteService = service;
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<QuoteResponse>> listQuotes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+
+        String brokerName = decodeHeader(encodedBrokerName);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<QuoteResponse> quotes = quoteService.listQuotes(brokerName, pageable);
+        return ResponseEntity.ok(quotes);
     }
 
     @PostMapping
