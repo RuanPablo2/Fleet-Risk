@@ -2,6 +2,7 @@ package com.ruanpablo2.fleet_vehicle_service.controllers;
 
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleModelSearchDTO;
+import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleYearDTO;
 import com.ruanpablo2.fleet_vehicle_service.services.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,5 +31,13 @@ public class VehicleController {
     public ResponseEntity<List<VehicleModelSearchDTO>> searchModels(@RequestParam("query") String query) {
         List<VehicleModelSearchDTO> results = vehicleService.searchModelsLocally(query);
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/{fipeCode}/years")
+    public ResponseEntity<List<VehicleYearDTO>> getVehicleYears(@PathVariable String fipeCode) {
+        System.out.println("🔍 Received a request for Years of FIPE: " + fipeCode);
+
+        List<VehicleYearDTO> years = vehicleService.getAvailableYears(fipeCode);
+        return ResponseEntity.ok(years);
     }
 }

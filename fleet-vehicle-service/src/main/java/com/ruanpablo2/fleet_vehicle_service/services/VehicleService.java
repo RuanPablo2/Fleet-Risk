@@ -8,6 +8,7 @@ import com.ruanpablo2.fleet_vehicle_service.config.RabbitMQConfig;
 import com.ruanpablo2.fleet_vehicle_service.dtos.BrandDTO;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleModelSearchDTO;
+import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleYearDTO;
 import com.ruanpablo2.fleet_vehicle_service.models.Brand;
 import com.ruanpablo2.fleet_vehicle_service.models.VehicleModel;
 import com.ruanpablo2.fleet_vehicle_service.repositories.BrandRepository;
@@ -98,8 +99,31 @@ public class VehicleService {
                 .map(model -> new VehicleModelSearchDTO(
                         model.getId(),
                         model.getName(),
-                        model.getBrand().getName()
+                        model.getBrand().getName(),
+                        model.getFipeCode()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public List<VehicleYearDTO> getAvailableYears(String fipeCode) {
+        String key = "fipe_years:" + fipeCode;
+        Object cachedData = redisTemplate.opsForValue().get(key);
+
+        if (cachedData != null) {
+            System.out.println("⚡ [CACHE HIT] Returning years from Redis...");
+            return objectMapper.convertValue(cachedData,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, VehicleYearDTO.class));
+        }
+
+        System.out.println("☁️ [CACHE MISS] Searching years in Parallelum API...");
+        List<VehicleYearDTO> years = fipeClient.getYearsByFipeCode(fipeCode);
+
+        if (years == null || years.isEmpty()) {
+            throw new ResourceNotFoundException("No years found for FIPE code: " + fipeCode, "YEAR_404");
+        }
+
+        redisTemplate.opsForValue().set(key, years, Duration.ofDays(7));
+
+        return years;
     }
 }

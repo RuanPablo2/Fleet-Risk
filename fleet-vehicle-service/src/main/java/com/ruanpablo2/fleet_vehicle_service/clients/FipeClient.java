@@ -2,8 +2,8 @@ package com.ruanpablo2.fleet_vehicle_service.clients;
 
 import com.ruanpablo2.fleet_vehicle_service.dtos.BrandDTO;
 import com.ruanpablo2.fleet_vehicle_service.dtos.ModelDTO;
-import com.ruanpablo2.fleet_vehicle_service.dtos.ModelWrapperDTO;
 import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleFipeResponse;
+import com.ruanpablo2.fleet_vehicle_service.dtos.VehicleYearDTO;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -45,5 +45,17 @@ public class FipeClient {
                 .uri("/cars/brands/{brandCode}/models", brandCode)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<ModelDTO>>() {});
+    }
+
+    public List<VehicleYearDTO> getYearsByFipeCode(String fipeCode) {
+        try {
+            return restClient.get()
+                    .uri("/cars/{fipeCode}/years", fipeCode)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<VehicleYearDTO>>() {});
+        } catch (Exception e) {
+            System.err.println("Error when consulting FIPE years: " + e.getMessage());
+            return null;
+        }
     }
 }
