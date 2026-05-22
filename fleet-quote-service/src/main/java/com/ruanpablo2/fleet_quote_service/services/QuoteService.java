@@ -6,6 +6,7 @@ import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import com.ruanpablo2.fleet_common.exceptions.UnauthorizedAccessException;
 import com.ruanpablo2.fleet_quote_service.clients.VehicleClient;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteApprovedEventDTO;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteKpiResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
@@ -240,5 +241,12 @@ public class QuoteService {
             vehicle.setModelName("Vehicle (" + vehicle.getFipeCode() + ")");
             vehicle.setFipeValue(BigDecimal.ZERO);
         }
+    }
+
+    public QuoteKpiResponse getKpis(String loggedBrokerName) {
+        long pending = repository.countByBrokerNameAndStatus(loggedBrokerName, QuoteStatus.PENDING);
+        long calculated = repository.countByBrokerNameAndStatus(loggedBrokerName, QuoteStatus.CALCULATED);
+        long approved = repository.countByBrokerNameAndStatus(loggedBrokerName, QuoteStatus.APPROVED);
+        return new QuoteKpiResponse(pending, calculated, approved);
     }
 }

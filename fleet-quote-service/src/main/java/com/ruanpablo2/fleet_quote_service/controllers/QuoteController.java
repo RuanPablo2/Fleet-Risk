@@ -1,6 +1,7 @@
 package com.ruanpablo2.fleet_quote_service.controllers;
 
 import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteKpiResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
@@ -104,5 +105,11 @@ public class QuoteController {
     private String decodeHeader(String encodedValue) {
         if (encodedValue == null) return null;
         return URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
+    }
+
+    @GetMapping("/kpis")
+    public ResponseEntity<QuoteKpiResponse> getKpis(@RequestHeader("X-Broker-Name") String encodedBrokerName) {
+        String brokerName = decodeHeader(encodedBrokerName);
+        return ResponseEntity.ok(quoteService.getKpis(brokerName));
     }
 }
