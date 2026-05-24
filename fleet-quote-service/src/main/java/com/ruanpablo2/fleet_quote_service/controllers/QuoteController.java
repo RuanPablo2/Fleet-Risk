@@ -4,6 +4,7 @@ import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteKpiResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
+import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -30,12 +31,15 @@ public class QuoteController {
     public ResponseEntity<Page<QuoteResponse>> listQuotes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String term,
+            @RequestParam(required = false) QuoteStatus status,
             @RequestHeader("X-Broker-Name") String encodedBrokerName) {
 
         String brokerName = decodeHeader(encodedBrokerName);
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<QuoteResponse> quotes = quoteService.listQuotes(brokerName, pageable);
+        Page<QuoteResponse> quotes = quoteService.listQuotes(brokerName, term, status, pageable);
+
         return ResponseEntity.ok(quotes);
     }
 

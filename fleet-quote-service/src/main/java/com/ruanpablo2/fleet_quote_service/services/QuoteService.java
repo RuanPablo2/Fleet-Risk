@@ -146,10 +146,13 @@ public class QuoteService {
         messagingTemplate.convertAndSend("/topic/quotes/" + quote.getId(), "CALCULATED");
     }
 
-    public Page<QuoteResponse> listQuotes(String loggedBrokerName, Pageable pageable) {
-        System.out.println("📊 [QUOTE SERVICE] Listing quotes for broker: " + loggedBrokerName);
+    public Page<QuoteResponse> listQuotes(String loggedBrokerName, String term, QuoteStatus status, Pageable pageable) {
 
-        return repository.findByBrokerNameOrderByCreatedAtDesc(loggedBrokerName, pageable)
+        String searchTerm = (term == null || term.trim().isEmpty()) ? null : "%" + term.toLowerCase() + "%";
+
+        System.out.println("📊 [QUOTE SERVICE] Listing quotes for broker: " + loggedBrokerName + " | Filters -> term: " + term + ", status: " + status);
+
+        return repository.findQuotesWithFilters(loggedBrokerName, searchTerm, status, pageable)
                 .map(quote -> new QuoteResponse(
                         quote.getId(),
                         quote.getCustomerName(),
