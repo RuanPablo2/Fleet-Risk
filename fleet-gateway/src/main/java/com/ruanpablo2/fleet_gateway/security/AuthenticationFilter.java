@@ -22,6 +22,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private static final List<String> OPEN_ENDPOINTS = List.of(
             "/api/v1/auth",
+            "/ws",
             "/v3/api-docs",
             "/swagger-ui",
             "/swagger-resources",

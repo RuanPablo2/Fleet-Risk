@@ -16,6 +16,7 @@ import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +30,14 @@ public class QuoteService {
     private final QuoteRepository repository;
     private final RabbitTemplate rabbitTemplate;
     private final VehicleClient vehicleClient;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public QuoteService(QuoteRepository repository, RabbitTemplate rabbitTemplate, VehicleClient vehicleClient) {
+    public QuoteService(QuoteRepository repository, RabbitTemplate rabbitTemplate,
+                        VehicleClient vehicleClient, SimpMessagingTemplate messagingTemplate) {
         this.repository = repository;
         this.rabbitTemplate = rabbitTemplate;
         this.vehicleClient = vehicleClient;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -138,6 +142,8 @@ public class QuoteService {
 
         repository.save(quote);
         System.out.println("✅ [QUOTE SERVICE] Quote ID: " + quote.getId() + " successfully updated with prices!");
+
+        messagingTemplate.convertAndSend("/topic/quotes/" + quote.getId(), "CALCULATED");
     }
 
     public Page<QuoteResponse> listQuotes(String loggedBrokerName, Pageable pageable) {
