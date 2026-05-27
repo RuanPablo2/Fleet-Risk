@@ -37,19 +37,19 @@ public class QuoteController {
 
         String brokerName = decodeHeader(encodedBrokerName);
         Pageable pageable = PageRequest.of(page, size);
-
         Page<QuoteResponse> quotes = quoteService.listQuotes(brokerName, term, status, pageable);
-
         return ResponseEntity.ok(quotes);
     }
 
     @PostMapping
     public ResponseEntity<Quote> create(
             @Valid @RequestBody QuoteRequest request,
-            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+            @RequestHeader("X-Broker-Name") String encodedBrokerName,
+            @RequestHeader("X-Broker-Email") String brokerEmail) {
 
         String brokerName = decodeHeader(encodedBrokerName);
-        return ResponseEntity.status(HttpStatus.CREATED).body(quoteService.createInitialQuote(request, brokerName));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(quoteService.createInitialQuote(request, brokerName, brokerEmail));
     }
 
     @GetMapping("/{id}")
@@ -66,10 +66,11 @@ public class QuoteController {
     public ResponseEntity<QuoteResponse> saveDraft(
             @PathVariable Long id,
             @Valid @RequestBody QuoteRequest request,
-            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+            @RequestHeader("X-Broker-Name") String encodedBrokerName,
+            @RequestHeader("X-Broker-Email") String brokerEmail) {
 
         String brokerName = decodeHeader(encodedBrokerName);
-        QuoteResponse response = quoteService.updateQuote(id, request, brokerName);
+        QuoteResponse response = quoteService.updateQuote(id, request, brokerName, brokerEmail);
         return ResponseEntity.ok(response);
     }
 
@@ -77,10 +78,11 @@ public class QuoteController {
     public ResponseEntity<Void> calculate(
             @PathVariable Long id,
             @Valid @RequestBody QuoteRequest request,
-            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+            @RequestHeader("X-Broker-Name") String encodedBrokerName,
+            @RequestHeader("X-Broker-Email") String brokerEmail) { // 👈 Novo Header
 
         String brokerName = decodeHeader(encodedBrokerName);
-        quoteService.calculateQuote(id, request, brokerName);
+        quoteService.calculateQuote(id, request, brokerName, brokerEmail);
         return ResponseEntity.accepted().build();
     }
 
@@ -91,7 +93,6 @@ public class QuoteController {
 
         String brokerName = decodeHeader(encodedBrokerName);
         quoteService.approveQuote(id, brokerName);
-
         return ResponseEntity.noContent().build();
     }
 
@@ -102,7 +103,6 @@ public class QuoteController {
 
         String brokerName = decodeHeader(encodedBrokerName);
         quoteService.resendDocument(id, brokerName);
-
         return ResponseEntity.accepted().build();
     }
 

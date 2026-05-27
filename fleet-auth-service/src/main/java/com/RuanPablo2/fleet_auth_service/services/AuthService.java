@@ -61,7 +61,7 @@ public class AuthService {
 
             User user = (User) auth.getPrincipal();
 
-            return jwtUtil.generateToken(user.getBrokerName(), user.getCnpj());
+            return jwtUtil.generateToken(user.getBrokerName(), user.getCnpj(), user.getEmail());
 
         } catch (BadCredentialsException e) {
             throw new UnauthorizedAccessException("Invalid e-mail or password.", "AUTH_401");

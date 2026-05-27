@@ -8,6 +8,7 @@ public record QuoteApprovedEventDTO(
         String customerName,
         String customerCnpj,
         String brokerName,
+        String brokerEmail,
         BigDecimal totalPremium,
         BigDecimal totalFipe,
         List<QuoteVehicleApprovedDTO> vehicles

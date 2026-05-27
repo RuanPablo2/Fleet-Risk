@@ -41,12 +41,13 @@ public class QuoteService {
     }
 
     @Transactional
-    public Quote createInitialQuote(QuoteRequest request, String loggedBrokerName) {
+    public Quote createInitialQuote(QuoteRequest request, String loggedBrokerName, String brokerEmail) {
         Quote quote = new Quote();
         quote.setCustomerName(request.customerName());
         quote.setCustomerCnpj(request.customerCnpj());
 
         quote.setBrokerName(loggedBrokerName);
+        quote.setBrokerEmail(brokerEmail);
         quote.setStatus(QuoteStatus.PENDING);
 
         for (QuoteVehicleRequest vehicleReq : request.vehicles()) {
@@ -57,7 +58,6 @@ public class QuoteService {
             vehicle.setCoverageLimit(vehicleReq.coverageLimit());
 
             enrichVehicleWithFipeData(vehicle);
-
             quote.addVehicle(vehicle);
         }
 
@@ -68,11 +68,12 @@ public class QuoteService {
     }
 
     @Transactional
-    public QuoteResponse updateQuote(Long id, QuoteRequest request, String loggedBrokerName) {
+    public QuoteResponse updateQuote(Long id, QuoteRequest request, String loggedBrokerName, String brokerEmail) {
         Quote quote = getQuoteById(id, loggedBrokerName);
 
         quote.setCustomerName(request.customerName());
         quote.setCustomerCnpj(request.customerCnpj());
+        quote.setBrokerEmail(brokerEmail);
         quote.setStatus(QuoteStatus.PENDING);
         quote.setTotalPremium(null);
 
@@ -86,7 +87,6 @@ public class QuoteService {
             vehicle.setCoverageLimit(v.coverageLimit());
 
             enrichVehicleWithFipeData(vehicle);
-
             quote.addVehicle(vehicle);
         });
 
@@ -104,8 +104,8 @@ public class QuoteService {
     }
 
     @Transactional
-    public void calculateQuote(Long id, QuoteRequest request, String loggedBrokerName) {
-        updateQuote(id, request, loggedBrokerName);
+    public void calculateQuote(Long id, QuoteRequest request, String loggedBrokerName, String brokerEmail) {
+        updateQuote(id, request, loggedBrokerName, brokerEmail);
 
         Quote quote = repository.findById(id).orElseThrow();
 
@@ -223,6 +223,7 @@ public class QuoteService {
                 quote.getCustomerName(),
                 quote.getCustomerCnpj(),
                 quote.getBrokerName(),
+                quote.getBrokerEmail(),
                 quote.getTotalPremium(),
                 totalFipeCalculated,
                 vehicleDTOs

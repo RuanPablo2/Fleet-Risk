@@ -24,6 +24,8 @@ public class Quote {
     @Column(name = "broker_name", nullable = false)
     private String brokerName;
 
+    private String brokerEmail;
+
     @Column(precision = 19, scale = 2)
     private BigDecimal totalPremium;
 
@@ -49,11 +51,12 @@ public class Quote {
     public Quote() {
     }
 
-    public Quote(Long id, String customerName, String customerCnpj, String brokerName, BigDecimal totalPremium, QuoteStatus status, LocalDateTime createdAt, List<QuoteVehicle> vehicles) {
+    public Quote(Long id, String customerName, String customerCnpj, String brokerName, String brokerEmail, BigDecimal totalPremium, QuoteStatus status, LocalDateTime createdAt, List<QuoteVehicle> vehicles) {
         this.id = id;
         this.customerName = customerName;
         this.customerCnpj = customerCnpj;
         this.brokerName = brokerName;
+        this.brokerEmail = brokerEmail;
         this.totalPremium = totalPremium;
         this.status = status;
         this.createdAt = createdAt;
@@ -86,6 +89,14 @@ public class Quote {
 
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
+    }
+
+    public String getBrokerEmail() {
+        return brokerEmail;
+    }
+
+    public void setBrokerEmail(String brokerEmail) {
+        this.brokerEmail = brokerEmail;
     }
 
     public void setCustomerName(String customerName) {

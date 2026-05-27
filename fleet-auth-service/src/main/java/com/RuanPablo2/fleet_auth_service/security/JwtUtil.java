@@ -22,38 +22,14 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String brokerName, String cnpj) {
+    public String generateToken(String brokerName, String cnpj, String email) {
         return Jwts.builder()
                 .subject(brokerName)
                 .claim("cnpj", cnpj)
+                .claim("email", email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
-    }
-
-    public String extractBrokerName(String token) {
-        return getClaims(token).getSubject();
-    }
-
-    public String extractCnpj(String token) {
-        return getClaims(token).get("cnpj", String.class);
-    }
-
-    public boolean isValid(String token) {
-        try {
-            getClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
     }
 }

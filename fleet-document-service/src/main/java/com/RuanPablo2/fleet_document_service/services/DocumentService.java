@@ -82,7 +82,7 @@ public class DocumentService {
 
             DocumentGeneratedEventDTO notificationEvent = new DocumentGeneratedEventDTO(
                     event.quoteId(),
-                    "ruanpablo2.dev@gmail.com",
+                    event.brokerEmail(),
                     event.customerName(),
                     absolutePath
             );

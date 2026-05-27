@@ -62,6 +62,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         String rawBrokerName = jwtUtil.extractBrokerName(token);
         String cnpj = jwtUtil.extractCnpj(token);
+        String email = jwtUtil.extractEmail(token);
 
         String safeBrokerName = URLEncoder.encode(rawBrokerName, StandardCharsets.UTF_8);
 
@@ -72,6 +73,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             public String getHeader(String name) {
                 if ("X-Broker-Name".equalsIgnoreCase(name)) return safeBrokerName;
                 if ("X-Broker-Cnpj".equalsIgnoreCase(name)) return cnpj;
+                if ("X-Broker-Email".equalsIgnoreCase(name)) return email;
                 return super.getHeader(name);
             }
 
@@ -79,6 +81,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             public Enumeration<String> getHeaders(String name) {
                 if ("X-Broker-Name".equalsIgnoreCase(name)) return Collections.enumeration(List.of(safeBrokerName));
                 if ("X-Broker-Cnpj".equalsIgnoreCase(name)) return Collections.enumeration(List.of(cnpj));
+                if ("X-Broker-Email".equalsIgnoreCase(name)) return Collections.enumeration(List.of(email));
                 return super.getHeaders(name);
             }
 
@@ -87,6 +90,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 List<String> names = Collections.list(super.getHeaderNames());
                 names.add("X-Broker-Name");
                 names.add("X-Broker-Cnpj");
+                names.add("X-Broker-Email");
                 return Collections.enumeration(names);
             }
         };

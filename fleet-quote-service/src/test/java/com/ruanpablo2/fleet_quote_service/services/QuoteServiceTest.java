@@ -48,6 +48,7 @@ class QuoteServiceTest {
     void createInitialQuote_ShouldCreateDraftAndFreezeFipeValue() {
 
         String brokerName = "Corretora Top Seguros";
+        String brokerEmail = "corretora@topseguros.com";
 
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
                 "ABC-1234", "001004-9", "2020-1", new BigDecimal("50000")
@@ -67,7 +68,7 @@ class QuoteServiceTest {
 
         when(repository.save(any(Quote.class))).thenReturn(mockSavedQuote);
 
-        Quote result = quoteService.createInitialQuote(request, brokerName);
+        Quote result = quoteService.createInitialQuote(request, brokerName, brokerEmail);
 
         assertNotNull(result);
 
@@ -82,6 +83,8 @@ class QuoteServiceTest {
     void createInitialQuote_ShouldFallbackToZeroWhenFipeIsDown() {
 
         String brokerName = "Corretora Top Seguros";
+        String brokerEmail = "corretora@topseguros.com";
+
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest("XYZ-9876", "004001-2", "2022-1", new BigDecimal("80000"));
         QuoteRequest request = new QuoteRequest("Transportes Rápidos", "98.765.432/0001-11", brokerName, List.of(vehicleReq));
 
@@ -91,10 +94,9 @@ class QuoteServiceTest {
         mockSavedQuote.setStatus(QuoteStatus.PENDING);
         when(repository.save(any(Quote.class))).thenReturn(mockSavedQuote);
 
-        Quote result = quoteService.createInitialQuote(request, brokerName);
+        Quote result = quoteService.createInitialQuote(request, brokerName, brokerEmail);
 
         assertNotNull(result);
-
         verify(repository, times(1)).save(any(Quote.class));
     }
 
@@ -102,6 +104,7 @@ class QuoteServiceTest {
     void calculateQuote_ShouldUpdateDraftAndSendEventToRabbitMQ() {
         Long quoteId = 1L;
         String brokerName = "Corretora Top Seguros";
+        String brokerEmail = "corretora@topseguros.com";
 
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
                 "ABC-1234", "001004-9", "2020-1", new BigDecimal("50000")
@@ -130,7 +133,7 @@ class QuoteServiceTest {
         VehicleFipeResponseDTO mockFipeResponse = new VehicleFipeResponseDTO("Fiat Uno", "R$ 35.500,00");
         when(vehicleClient.getVehicleDetails("001004-9", "2020-1")).thenReturn(mockFipeResponse);
 
-        quoteService.calculateQuote(quoteId, request, brokerName);
+        quoteService.calculateQuote(quoteId, request, brokerName, brokerEmail);
 
         verify(rabbitTemplate, times(1)).convertAndSend(
                 eq("fleet.quote.events"),

@@ -35,6 +35,10 @@ public class JwtUtil {
         return getClaims(token).get("cnpj", String.class);
     }
 
+    public String extractEmail(String token) {
+        return getClaims(token).get("email", String.class);
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
