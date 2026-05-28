@@ -17,7 +17,7 @@ public class CorsConfig {
     public FilterRegistrationBean<CorsFilter> customCorsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        config.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://fleetrisk.netlify.app"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true);
