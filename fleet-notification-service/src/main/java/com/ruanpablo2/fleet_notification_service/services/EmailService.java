@@ -42,7 +42,7 @@ public class EmailService {
             helper.setSubject("📄 Proposta Comercial Disponível - FleetRisk Seguros");
             helper.setText(htmlBody, true);
 
-            String documentServiceUrl = "http://fleet-document-service:8080/api/v1/documents/quotes/" + quoteId + "/download";
+            String documentServiceUrl = "http://api-gateway:8080/api/v1/documents/quotes/" + quoteId + "/download";
 
             byte[] pdfBytes = restTemplate.getForObject(documentServiceUrl, byte[].class);
 
