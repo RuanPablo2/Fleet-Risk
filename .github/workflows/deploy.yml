@@ -19,13 +19,17 @@ jobs:
           script: |
             echo "Iniciando o deploy do FleetRisk..."
             cd ~/Fleet-Risk
-            
+
             git pull origin main
-            
+
             sudo docker run --rm -v "$PWD/api-gateway":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
             sudo docker run --rm -v "$PWD/fleet-document-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
             sudo docker run --rm -v "$PWD/fleet-notification-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
-            
+            sudo docker run --rm -v "$PWD/fleet-quote-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+            sudo docker run --rm -v "$PWD/fleet-vehicle-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+            sudo docker run --rm -v "$PWD/fleet-pricing-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+
+            # Reiniciando os contêineres
             sudo docker compose -f docker-compose.prod.yml up -d --build
-            
+
             echo "Deploy concluído com sucesso!"

@@ -70,9 +70,11 @@ public class GatewayConfig {
     public RouterFunction<ServerResponse> websocketQuoteRoute() {
         System.out.println("🚦 [FLEET GATEWAY] Registering route for WebSockets: " + quoteServiceUrl);
 
+        String wsUrl = quoteServiceUrl.replace("http://", "ws://");
+
         return route("websocket-quote-route")
                 .route(RequestPredicates.path("/ws/quotes/**"), http())
-                .before(uri(quoteServiceUrl))
+                .before(uri(wsUrl))
                 .build();
     }
 }
