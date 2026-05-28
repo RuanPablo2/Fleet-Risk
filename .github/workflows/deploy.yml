@@ -1,0 +1,31 @@
+name: Deploy FleetRisk to Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Aceder ao servidor e atualizar a infraestrutura
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USERNAME }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            echo "Iniciando o deploy do FleetRisk..."
+            cd ~/Fleet-Risk
+            
+            git pull origin main
+            
+            sudo docker run --rm -v "$PWD/api-gateway":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+            sudo docker run --rm -v "$PWD/fleet-document-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+            sudo docker run --rm -v "$PWD/fleet-notification-service":/app -w /app -v "$PWD/.m2:/root/.m2" maven:3.9-eclipse-temurin-21 mvn clean package -Dmaven.test.skip=true
+            
+            sudo docker compose -f docker-compose.prod.yml up -d --build
+            
+            echo "Deploy concluído com sucesso!"
