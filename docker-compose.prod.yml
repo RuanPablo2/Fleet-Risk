@@ -93,6 +93,7 @@ services:
       - SPRING_RABBITMQ_HOST=fleet-rabbitmq
       - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
       - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
+      - VEHICLE_SERVICE_URL=http://fleet-vehicle-service:8082/api/v1/vehicles
     depends_on:
       - postgres
       - rabbitmq
