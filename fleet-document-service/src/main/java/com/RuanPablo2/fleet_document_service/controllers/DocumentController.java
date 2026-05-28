@@ -1,7 +1,6 @@
 package com.RuanPablo2.fleet_document_service.controllers;
 
 import com.RuanPablo2.fleet_document_service.services.DocumentService;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +20,14 @@ public class DocumentController {
     }
 
     @GetMapping("/quotes/{quoteId}/download")
-    public ResponseEntity<Resource> downloadProposal(@PathVariable Long quoteId) {
+    public ResponseEntity<byte[]> downloadProposal(@PathVariable Long quoteId) {
 
-        Resource resource = documentService.getProposalResource(quoteId);
-        String fileName = resource.getFilename();
+        byte[] pdfBytes = documentService.getProposalBytes(quoteId);
+        String fileName = "Proposta_FleetRisk_" + quoteId + ".pdf";
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .body(resource);
+                .body(pdfBytes);
     }
 }

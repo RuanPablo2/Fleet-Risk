@@ -1,32 +1,31 @@
 package com.RuanPablo2.fleet_document_service.services;
 
-
 import com.RuanPablo2.fleet_document_service.dtos.QuoteApprovedEventDTO;
 import com.lowagie.text.pdf.BaseFont;
 import com.ruanpablo2.fleet_common.dtos.DocumentGeneratedEventDTO;
 import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class DocumentService {
 
     private final TemplateEngine templateEngine;
     private final RabbitTemplate rabbitTemplate;
+
+    private final Map<Long, byte[]> pdfCache = new ConcurrentHashMap<>();
 
     public DocumentService(TemplateEngine templateEngine, RabbitTemplate rabbitTemplate) {
         this.templateEngine = templateEngine;
@@ -47,7 +46,6 @@ public class DocumentService {
             context.setVariable("customerName", event.customerName());
             context.setVariable("customerCnpj", event.customerCnpj());
             context.setVariable("brokerName", event.brokerName());
-
             context.setVariable("totalPremium", currencyFormatter.format(event.totalPremium()));
             context.setVariable("totalFipe", currencyFormatter.format(event.totalFipe()));
 
@@ -71,20 +69,17 @@ public class DocumentService {
             renderer.layout();
             renderer.createPDF(outputStream);
 
-            String fileName = "Proposta" + event.quoteId() + ".pdf";
-            try (FileOutputStream fos = new FileOutputStream(fileName)) {
-                fos.write(outputStream.toByteArray());
-            }
+            byte[] pdfBytes = outputStream.toByteArray();
 
-            System.out.println("✅ [DOCUMENT] PDF successfully generated and saved locally: " + fileName);
+            pdfCache.put(event.quoteId(), pdfBytes);
 
-            String absolutePath = new File(fileName).getAbsolutePath();
+            System.out.println("✅ [DOCUMENT] PDF successfully generated and saved in MEMORY.");
 
             DocumentGeneratedEventDTO notificationEvent = new DocumentGeneratedEventDTO(
                     event.quoteId(),
                     event.brokerEmail(),
                     event.customerName(),
-                    absolutePath
+                    "IN_MEMORY"
             );
 
             rabbitTemplate.convertAndSend("fleet.document.events", "document.generated.key", notificationEvent);
@@ -96,15 +91,14 @@ public class DocumentService {
         }
     }
 
-    public Resource getProposalResource(Long quoteId) {
-        String fileName = "Proposta" + quoteId + ".pdf";
-        File pdfFile = new File(fileName);
+    public byte[] getProposalBytes(Long quoteId) {
+        byte[] pdfBytes = pdfCache.get(quoteId);
 
-        if (!pdfFile.exists()) {
-            System.err.println("🚨 [DOCUMENT] Download failed: File not found for Quote ID " + quoteId);
+        if (pdfBytes == null) {
+            System.err.println("🚨 [DOCUMENT] Download failed: File not found in memory for Quote ID " + quoteId);
             throw new ResourceNotFoundException("Proposal file not found for Quote ID: " + quoteId, "DOC_404");
         }
 
-        return new FileSystemResource(pdfFile);
+        return pdfBytes;
     }
 }
