@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, Long> {
     Page<Quote> findByBrokerNameOrderByCreatedAtDesc(String brokerName, Pageable pageable);
@@ -24,4 +26,6 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
             @Param("term") String term,
             @Param("status") QuoteStatus status,
             Pageable pageable);
+
+    List<Quote> findByBrokerEmail(String brokerEmail);
 }
