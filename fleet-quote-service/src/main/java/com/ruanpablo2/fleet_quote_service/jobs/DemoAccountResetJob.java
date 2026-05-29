@@ -1,26 +1,32 @@
 package com.ruanpablo2.fleet_quote_service.jobs;
 
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteApprovedEventDTO;
+import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class DemoAccountResetJob {
 
     private final QuoteRepository quoteRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     private static final String DEMO_EMAIL = "demo@fleetrisk.com";
     private static final String DEMO_BROKER_NAME = "Fleet Risk Demonstração";
 
-    public DemoAccountResetJob(QuoteRepository quoteRepository) {
+    public DemoAccountResetJob(QuoteRepository quoteRepository, RabbitTemplate rabbitTemplate) {
         this.quoteRepository = quoteRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Scheduled(cron = "0 0 0,12 * * *", zone = "America/Sao_Paulo")
@@ -39,7 +45,47 @@ public class DemoAccountResetJob {
 
         quoteRepository.saveAll(List.of(pendingQuote, calculatedQuote, approvedQuote));
 
-        System.out.println("✅ [CRON JOB] Vitrine restaurada com sucesso! Cotações originais do banco reinseridas.");
+        publishDocumentEvent(approvedQuote);
+
+        System.out.println("✅ [CRON JOB] Vitrine restaurada com sucesso! Cotações originais do banco reinseridas e PDF engatilhado.");
+    }
+
+    private void publishDocumentEvent(Quote quote) {
+        BigDecimal totalFipeCalculated = BigDecimal.ZERO;
+        List<QuoteVehicleApprovedDTO> vehicleDTOs = new ArrayList<>();
+
+        for (QuoteVehicle v : quote.getVehicles()) {
+            BigDecimal fipeValue = v.getFipeValue() != null ? v.getFipeValue() : BigDecimal.ZERO;
+            totalFipeCalculated = totalFipeCalculated.add(fipeValue);
+
+            String displayName = v.getModelName() != null ? v.getModelName() : "Vehicle (" + v.getFipeCode() + ")";
+
+            vehicleDTOs.add(new QuoteVehicleApprovedDTO(
+                    displayName,
+                    v.getYearId(),
+                    v.getLicensePlate(),
+                    fipeValue,
+                    v.getCalculatedPremium()
+            ));
+        }
+
+        QuoteApprovedEventDTO event = new QuoteApprovedEventDTO(
+                quote.getId(),
+                quote.getCustomerName(),
+                quote.getCustomerCnpj(),
+                quote.getBrokerName(),
+                quote.getBrokerEmail(),
+                quote.getTotalPremium(),
+                totalFipeCalculated,
+                vehicleDTOs
+        );
+
+        try {
+            rabbitTemplate.convertAndSend("fleet.quote.events", "quote.approved.key", event);
+            System.out.println("📬 [CRON JOB] Evento enviado pro RabbitMQ para gerar PDF da cotação: " + quote.getId());
+        } catch (Exception e) {
+            System.err.println("⚠️ [CRON JOB] Erro ao avisar o RabbitMQ: " + e.getMessage());
+        }
     }
 
     private Quote createPendingQuote() {
