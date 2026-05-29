@@ -20,6 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/quotes")
                 .setAllowedOrigins("https://fleetrisk.netlify.app", "http://localhost:4200")
-                .withSockJS();
+                .withSockJS()
+                .setSuppressCors(true);
     }
 }
