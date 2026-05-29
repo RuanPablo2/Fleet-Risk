@@ -68,13 +68,11 @@ public class GatewayConfig {
 
     @Bean
     public RouterFunction<ServerResponse> websocketQuoteRoute() {
-        System.out.println("🚦 [FLEET GATEWAY] Registering route for WebSockets: " + quoteServiceUrl);
-
-        String wsUrl = quoteServiceUrl.replace("http://", "ws://");
+        System.out.println("🚦 [FLEET GATEWAY] Registering route for WebSockets via SockJS");
 
         return route("websocket-quote-route")
                 .route(RequestPredicates.path("/ws/quotes/**"), http())
-                .before(uri(wsUrl))
+                .before(uri(quoteServiceUrl))
                 .build();
     }
 }
