@@ -9,15 +9,30 @@
 ![JWT](https://img.shields.io/badge/Security-JWT_Auth-black?style=for-the-badge&logo=jsonwebtokens)
 ![Oracle Cloud](https://img.shields.io/badge/Cloud-Oracle_OCI-F80000?style=for-the-badge&logo=oracle)
 
-Sistema avançado de cotação de seguros para frotas comerciais (Cotador de Seguros) construído sob uma **Arquitetura de Microsserviços**. O projeto simula o ambiente central de uma seguradora, utilizando mensageria assíncrona para cálculos atuariais, roteamento seguro via API Gateway, cache de dados da Tabela FIPE e geração de apólices em PDF de forma automatizada.
+Sistema avançado de cotação de seguros para frotas comerciais construído sob uma **Arquitetura de Microsserviços**. O projeto simula o ambiente central de uma seguradora, utilizando mensageria assíncrona para cálculos atuariais, roteamento seguro via API Gateway, cache de dados da Tabela FIPE e geração de propostas em PDF de forma automatizada.
+
+## 🚀 Acesse o projeto em produção
+
+- **Aplicação Front-end:** https://fleetrisk.netlify.app/login
+
+- **Documentação da API (Swagger):** https://fleetrisk-ruanpablo2.duckdns.org/swagger-ui/index.html
+
+## 🔥 Highlights Técnicos (diferenciais do projeto)
+
+- **Ambiente de Demonstração Auto-Gerenciável:** Implementação de um Cron Job nativo no Spring Boot que roda a cada 12 horas, limpando dados de teste de usuários e restaurando automaticamente uma "vitrine" de cotações perfeitas no banco de dados para avaliação de recrutadores, sem consumir APIs externas.
+
+- **Comunicação Real-Time Resiliente:** Uso de WebSockets integrados com **SockJS** para garantir o bypass em regras estritas de proxies reversos (Nginx) e API Gateways, permitindo a atualização do prêmio atuarial na tela do frontend em tempo real, sem falhas de handshake ou CORS.
 
 ## ☁️ Arquitetura de Nuvem e DevOps
 
 O FleetRisk foi construído com foco total em **Nuvem (Cloud-Native)**. Isso significa que o código é 100% independente da máquina física, permitindo que o sistema seja implantado em qualquer provedor de nuvem de forma rápida, segura e com alta disponibilidade.
-- **Infraestrutura em Nuvem:** Preparado para implantação em instância **Ampere A1 (ARM64)** na **Oracle Cloud Infrastructure (OCI)**.
-- **Orquestração de Contêineres:** Todo o ecossistema (Bancos de dados, Cache, Broker e Microsserviços) é provisionado pelo **Docker Compose** utilizando redes internas (Bridge Network).
+- **Infraestrutura em Nuvem:** Implantado em instância **Ampere A1 (ARM64)** na **Oracle Cloud Infrastructure (OCI)** com IP dinâmico gerenciado via **DuckDNS**.
+
+- **Orquestração de Contêineres:** Todo o ecossistema (Bancos de dados, Cache, Broker e Microsserviços) é provisionado pelo Docker Compose utilizando redes internas (Bridge Network).
+
 - **Database-per-Service:** Máximo isolamento de dados. Cada microsserviço gerencia seu próprio banco de dados PostgreSQL.
-- **Imagens Otimizadas:** Utilização do `eclipse-temurin:21-jre-alpine` para garantir microsserviços extremamente leves, com alta performance e suporte nativo a arquitetura ARM/AMD.
+
+- **CI/CD:** Pipeline configurado via GitHub Actions para build dinâmico com Maven e deploy automatizado nos contêineres da Oracle Cloud.
 
 ## 📐 Estrutura dos Microsserviços (Monorepo)
 
@@ -46,7 +61,7 @@ O ecossistema é dividido em contextos delimitados (Domain-Driven Design), isola
 
 ---
 
-## 🔗 Documentação Completa da API (Endpoints)
+## 🔗 Documentação completa da API (Endpoints)
 
 Todas as requisições devem ser feitas apontando para o **API Gateway** (`http://localhost:8080`).
 
