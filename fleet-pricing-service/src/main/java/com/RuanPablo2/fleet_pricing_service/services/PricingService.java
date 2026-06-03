@@ -5,6 +5,8 @@ import com.ruanpablo2.fleet_common.dtos.QuoteCalculatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteCreatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleCalculatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleEventDTO;
+import com.ruanpablo2.fleet_common.dtos.VehicleCoverageCalculatedEventDTO;
+import com.ruanpablo2.fleet_common.dtos.VehicleCoverageEventDTO;
 import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
 import com.ruanpablo2.fleet_common.exceptions.IntegrationException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,9 +21,11 @@ import java.util.List;
 @Service
 public class PricingService {
 
-    private static final BigDecimal BASE_RATE = new BigDecimal("0.02");
-    private static final BigDecimal COVERAGE_RATE = new BigDecimal("0.005");
-    private static final BigDecimal AGE_SURCHARGE = new BigDecimal("500.00");
+    private static final BigDecimal CASCO_BASE_RATE = new BigDecimal("0.03"); // 3% sobre o valor ajustado da FIPE
+    private static final BigDecimal RCF_BASE_RATE = new BigDecimal("0.005");  // 0.5% sobre o LMI (Danos Materiais/Corporais/Morais)
+    private static final BigDecimal APP_BASE_RATE = new BigDecimal("0.002");  // 0.2% sobre o LMI (Acidentes Pessoais)
+
+    private static final BigDecimal AGE_SURCHARGE = new BigDecimal("500.00"); // Agravo para carros antigos
     private static final int AGE_THRESHOLD = 2020;
 
     private final RabbitTemplate rabbitTemplate;
@@ -62,20 +66,49 @@ public class PricingService {
                 throw new IntegrationException("Vehicle Service unavailable. RabbitMQ should requeue or DLQ this message.", "PRICING_502");
             }
 
-            BigDecimal basePremium = realFipeValue.multiply(BASE_RATE);
-            BigDecimal coveragePremium = vehicle.coverageLimit().multiply(COVERAGE_RATE);
+            BigDecimal vehicleTotalPremium = BigDecimal.ZERO;
+            List<VehicleCoverageCalculatedEventDTO> calculatedCoverages = new ArrayList<>();
 
-            BigDecimal ageSurcharge = BigDecimal.ZERO;
-            if (extractYear(vehicle.yearId()) < AGE_THRESHOLD) {
-                ageSurcharge = AGE_SURCHARGE;
+            for (VehicleCoverageEventDTO coverage : vehicle.coverages()) {
+                BigDecimal coveragePremium = BigDecimal.ZERO;
+
+                switch (coverage.type()) {
+                    case CASCO:
+                        BigDecimal percentualFator = coverage.fipePercentage().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                        BigDecimal adjustedFipe = realFipeValue.multiply(percentualFator);
+                        coveragePremium = adjustedFipe.multiply(CASCO_BASE_RATE);
+                        break;
+
+                    case RCF_DM:
+                    case RCF_DC:
+                    case RCF_DMO:
+                        coveragePremium = coverage.limitAmount().multiply(RCF_BASE_RATE);
+                        break;
+
+                    case APP_MORTE:
+                    case APP_INVALIDEZ:
+                        coveragePremium = coverage.limitAmount().multiply(APP_BASE_RATE);
+                        break;
+                }
+
+                calculatedCoverages.add(new VehicleCoverageCalculatedEventDTO(
+                        coverage.type(),
+                        coveragePremium.setScale(2, RoundingMode.HALF_UP)
+                ));
+
+                vehicleTotalPremium = vehicleTotalPremium.add(coveragePremium);
             }
 
-            BigDecimal finalVehiclePremium = basePremium.add(coveragePremium).add(ageSurcharge)
-                    .setScale(2, RoundingMode.HALF_UP);
+            if (extractYear(vehicle.yearId()) < AGE_THRESHOLD) {
+                vehicleTotalPremium = vehicleTotalPremium.add(AGE_SURCHARGE);
+            }
+
+            BigDecimal finalVehiclePremium = vehicleTotalPremium.setScale(2, RoundingMode.HALF_UP);
 
             calculatedVehicles.add(new QuoteVehicleCalculatedEventDTO(
-                    vehicle.vehicleId(),
-                    finalVehiclePremium
+                    vehicle.id(),
+                    finalVehiclePremium,
+                    calculatedCoverages
             ));
 
             totalFleetPremium = totalFleetPremium.add(finalVehiclePremium);

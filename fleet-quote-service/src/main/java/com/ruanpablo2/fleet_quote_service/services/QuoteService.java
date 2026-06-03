@@ -1,6 +1,7 @@
 package com.ruanpablo2.fleet_quote_service.services;
 
 import com.ruanpablo2.fleet_common.dtos.*;
+import com.ruanpablo2.fleet_common.enums.CoverageType;
 import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
 import com.ruanpablo2.fleet_common.exceptions.ResourceNotFoundException;
 import com.ruanpablo2.fleet_common.exceptions.UnauthorizedAccessException;
@@ -11,6 +12,7 @@ import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
+import com.ruanpablo2.fleet_quote_service.entities.VehicleCoverage;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -55,7 +57,17 @@ public class QuoteService {
             vehicle.setLicensePlate(vehicleReq.licensePlate());
             vehicle.setFipeCode(vehicleReq.fipeCode());
             vehicle.setYearId(vehicleReq.yearId());
-            vehicle.setCoverageLimit(vehicleReq.coverageLimit());
+
+            validateBusinessRules(vehicleReq.coverages());
+
+            for (VehicleCoverageRequest covReq : vehicleReq.coverages()) {
+                VehicleCoverage coverage = new VehicleCoverage();
+                coverage.setType(covReq.type());
+                coverage.setFipePercentage(covReq.fipePercentage());
+                coverage.setLimitAmount(covReq.limitAmount());
+
+                vehicle.addCoverage(coverage);
+            }
 
             enrichVehicleWithFipeData(vehicle);
             quote.addVehicle(vehicle);
@@ -84,7 +96,17 @@ public class QuoteService {
             vehicle.setLicensePlate(v.licensePlate());
             vehicle.setFipeCode(v.fipeCode());
             vehicle.setYearId(v.yearId());
-            vehicle.setCoverageLimit(v.coverageLimit());
+
+            validateBusinessRules(v.coverages());
+
+            v.coverages().forEach(covReq -> {
+                VehicleCoverage coverage = new VehicleCoverage();
+                coverage.setType(covReq.type());
+                coverage.setFipePercentage(covReq.fipePercentage());
+                coverage.setLimitAmount(covReq.limitAmount());
+
+                vehicle.addCoverage(coverage);
+            });
 
             enrichVehicleWithFipeData(vehicle);
             quote.addVehicle(vehicle);
@@ -103,6 +125,20 @@ public class QuoteService {
         );
     }
 
+    private void validateBusinessRules(List<VehicleCoverageRequest> coverages) {
+        if (coverages == null || coverages.isEmpty()) {
+            throw new BusinessRuleException("Vehicle must have at least one selected coverage.", "QUOTE_422");
+        }
+
+        boolean hasDM = coverages.stream().anyMatch(c -> c.type() == CoverageType.RCF_DM);
+        boolean hasDC = coverages.stream().anyMatch(c -> c.type() == CoverageType.RCF_DC);
+        boolean hasDMO = coverages.stream().anyMatch(c -> c.type() == CoverageType.RCF_DMO);
+
+        if (hasDMO && (!hasDM || !hasDC)) {
+            throw new BusinessRuleException("To select Moral Damages (DMO), you must also select Material Damages (DM) and Bodily Injury (DC).", "QUOTE_422");
+        }
+    }
+
     @Transactional
     public void calculateQuote(Long id, QuoteRequest request, String loggedBrokerName, String brokerEmail) {
         updateQuote(id, request, loggedBrokerName, brokerEmail);
@@ -110,12 +146,18 @@ public class QuoteService {
         Quote quote = repository.findById(id).orElseThrow();
 
         List<QuoteVehicleEventDTO> vehicleEvents = quote.getVehicles().stream()
-                .map(v -> new QuoteVehicleEventDTO(
-                        v.getId(),
-                        v.getFipeCode(),
-                        v.getYearId(),
-                        v.getCoverageLimit()
-                ))
+                .map(v -> {
+                    List<VehicleCoverageEventDTO> coverageEvents = v.getCoverages().stream()
+                            .map(c -> new VehicleCoverageEventDTO(c.getType(), c.getFipePercentage(), c.getLimitAmount()))
+                            .toList();
+
+                    return new QuoteVehicleEventDTO(
+                            v.getId(),
+                            v.getFipeCode(),
+                            v.getYearId(),
+                            coverageEvents
+                    );
+                })
                 .toList();
 
         QuoteCreatedEventDTO event = new QuoteCreatedEventDTO(quote.getId(), vehicleEvents);
@@ -136,12 +178,22 @@ public class QuoteService {
             for (QuoteVehicle vehicle : quote.getVehicles()) {
                 if (vehicle.getId().equals(vehicleEvent.vehicleId())) {
                     vehicle.setCalculatedPremium(vehicleEvent.calculatedPremium());
+
+                    if (vehicleEvent.coverages() != null) {
+                        for (VehicleCoverageCalculatedEventDTO covEvent : vehicleEvent.coverages()) {
+                            for (VehicleCoverage coverage : vehicle.getCoverages()) {
+                                if (coverage.getType() == covEvent.type()) {
+                                    coverage.setPremiumAmount(covEvent.premiumAmount());
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
         repository.save(quote);
-        System.out.println("✅ [QUOTE SERVICE] Quote ID: " + quote.getId() + " successfully updated with prices!");
+        System.out.println("✅ [QUOTE SERVICE] Quote ID: " + quote.getId() + " successfully updated with prices and coverage breakdown!");
 
         messagingTemplate.convertAndSend("/topic/quotes/" + quote.getId(), "CALCULATED");
     }

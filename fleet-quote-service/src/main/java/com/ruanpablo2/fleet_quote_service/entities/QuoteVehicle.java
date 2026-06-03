@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "quote_vehicles")
@@ -22,9 +24,6 @@ public class QuoteVehicle {
     private BigDecimal fipeValue;
 
     @Column(precision = 19, scale = 2)
-    private BigDecimal coverageLimit;
-
-    @Column(precision = 19, scale = 2)
     private BigDecimal calculatedPremium;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,17 +31,19 @@ public class QuoteVehicle {
     @JsonIgnore
     private Quote quote;
 
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VehicleCoverage> coverages = new ArrayList<>();
+
     public QuoteVehicle() {
     }
 
-    public QuoteVehicle(Long id, String licensePlate, String fipeCode, String yearId, String modelName, BigDecimal fipeValue, BigDecimal coverageLimit, BigDecimal calculatedPremium, Quote quote) {
+    public QuoteVehicle(Long id, String licensePlate, String fipeCode, String yearId, String modelName, BigDecimal fipeValue, BigDecimal calculatedPremium, Quote quote) {
         this.id = id;
         this.licensePlate = licensePlate;
         this.fipeCode = fipeCode;
         this.yearId = yearId;
         this.modelName = modelName;
         this.fipeValue = fipeValue;
-        this.coverageLimit = coverageLimit;
         this.calculatedPremium = calculatedPremium;
         this.quote = quote;
     }
@@ -95,14 +96,6 @@ public class QuoteVehicle {
         this.fipeValue = fipeValue;
     }
 
-    public BigDecimal getCoverageLimit() {
-        return coverageLimit;
-    }
-
-    public void setCoverageLimit(BigDecimal coverageLimit) {
-        this.coverageLimit = coverageLimit;
-    }
-
     public BigDecimal getCalculatedPremium() {
         return calculatedPremium;
     }
@@ -117,5 +110,18 @@ public class QuoteVehicle {
 
     public void setQuote(Quote quote) {
         this.quote = quote;
+    }
+
+    public List<VehicleCoverage> getCoverages() {
+        return coverages;
+    }
+
+    public void setCoverages(List<VehicleCoverage> coverages) {
+        this.coverages = coverages;
+    }
+
+    public void addCoverage(VehicleCoverage coverage) {
+        coverages.add(coverage);
+        coverage.setVehicle(this);
     }
 }

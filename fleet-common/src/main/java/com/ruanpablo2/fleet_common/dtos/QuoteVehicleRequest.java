@@ -1,9 +1,9 @@
 package com.ruanpablo2.fleet_common.dtos;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 public record QuoteVehicleRequest(
         @NotBlank(message = "Vehicle plate is required")
@@ -15,6 +15,6 @@ public record QuoteVehicleRequest(
         @NotBlank(message = "Year ID is required")
         String yearId,
 
-        @NotNull(message = "Coverage limit is required")
-        BigDecimal coverageLimit
+        @NotEmpty(message = "The vehicle must have at least one cover")
+        List<VehicleCoverageRequest> coverages
 ) {}

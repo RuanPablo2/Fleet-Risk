@@ -3,11 +3,14 @@ package com.ruanpablo2.fleet_quote_service.services;
 import com.ruanpablo2.fleet_common.dtos.QuoteCreatedEventDTO;
 import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleRequest;
+import com.ruanpablo2.fleet_common.dtos.VehicleCoverageRequest;
+import com.ruanpablo2.fleet_common.enums.CoverageType;
 import com.ruanpablo2.fleet_common.exceptions.BusinessRuleException;
 import com.ruanpablo2.fleet_quote_service.clients.VehicleClient;
 import com.ruanpablo2.fleet_quote_service.dtos.VehicleFipeResponseDTO;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
+import com.ruanpablo2.fleet_quote_service.entities.VehicleCoverage;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
 import org.junit.jupiter.api.Test;
@@ -50,8 +53,12 @@ class QuoteServiceTest {
         String brokerName = "Corretora Top Seguros";
         String brokerEmail = "corretora@topseguros.com";
 
+        VehicleCoverageRequest coverage = new VehicleCoverageRequest(
+                CoverageType.RCF_DM, null, new BigDecimal("50000")
+        );
+
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
-                "ABC-1234", "001004-9", "2020-1", new BigDecimal("50000")
+                "ABC-1234", "001004-9", "2020-1", List.of(coverage)
         );
 
         QuoteRequest request = new QuoteRequest(
@@ -71,11 +78,8 @@ class QuoteServiceTest {
         Quote result = quoteService.createInitialQuote(request, brokerName, brokerEmail);
 
         assertNotNull(result);
-
         assertEquals(QuoteStatus.PENDING, result.getStatus());
-
         verify(repository, times(1)).save(any(Quote.class));
-
         verify(vehicleClient, times(1)).getVehicleDetails("001004-9", "2020-1");
     }
 
@@ -85,8 +89,16 @@ class QuoteServiceTest {
         String brokerName = "Corretora Top Seguros";
         String brokerEmail = "corretora@topseguros.com";
 
-        QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest("XYZ-9876", "004001-2", "2022-1", new BigDecimal("80000"));
-        QuoteRequest request = new QuoteRequest("Transportes Rápidos", "98.765.432/0001-11", brokerName, List.of(vehicleReq));
+        VehicleCoverageRequest coverage = new VehicleCoverageRequest(
+                CoverageType.RCF_DM, null, new BigDecimal("80000")
+        );
+
+        QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
+                "XYZ-9876", "004001-2", "2022-1", List.of(coverage)
+        );
+        QuoteRequest request = new QuoteRequest(
+                "Transportes Rápidos", "98.765.432/0001-11", brokerName, List.of(vehicleReq)
+        );
 
         when(vehicleClient.getVehicleDetails(anyString(), anyString())).thenThrow(new RuntimeException("FIPE API Offline"));
 
@@ -106,8 +118,12 @@ class QuoteServiceTest {
         String brokerName = "Corretora Top Seguros";
         String brokerEmail = "corretora@topseguros.com";
 
+        VehicleCoverageRequest coverageReq = new VehicleCoverageRequest(
+                CoverageType.RCF_DM, null, new BigDecimal("50000")
+        );
+
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
-                "ABC-1234", "001004-9", "2020-1", new BigDecimal("50000")
+                "ABC-1234", "001004-9", "2020-1", List.of(coverageReq)
         );
         QuoteRequest request = new QuoteRequest(
                 "Viação Estrela", "12.345.678/0001-99", brokerName, List.of(vehicleReq)
@@ -123,11 +139,15 @@ class QuoteServiceTest {
         existingVehicle.setId(100L);
         existingVehicle.setFipeCode("001004-9");
         existingVehicle.setYearId("2020-1");
-        existingVehicle.setCoverageLimit(new BigDecimal("50000"));
+
+        VehicleCoverage covEntity = new VehicleCoverage();
+        covEntity.setType(CoverageType.RCF_DM);
+        covEntity.setLimitAmount(new BigDecimal("50000"));
+        existingVehicle.addCoverage(covEntity);
+
         existingQuote.addVehicle(existingVehicle);
 
         when(repository.findById(quoteId)).thenReturn(Optional.of(existingQuote));
-
         when(repository.save(any(Quote.class))).thenReturn(existingQuote);
 
         VehicleFipeResponseDTO mockFipeResponse = new VehicleFipeResponseDTO("Fiat Uno", "R$ 35.500,00");
@@ -144,7 +164,6 @@ class QuoteServiceTest {
         QuoteCreatedEventDTO capturedEvent = eventCaptor.getValue();
 
         assertEquals(quoteId, capturedEvent.quoteId());
-
         assertFalse(capturedEvent.vehicles().isEmpty());
         assertEquals("001004-9", capturedEvent.vehicles().get(0).fipeCode());
     }
@@ -167,9 +186,7 @@ class QuoteServiceTest {
         });
 
         assertEquals("Cannot approve a quote that is not in CALCULATED status.", exception.getMessage());
-
         verify(repository, never()).save(any(Quote.class));
-
         verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), any(Object.class));
     }
 }

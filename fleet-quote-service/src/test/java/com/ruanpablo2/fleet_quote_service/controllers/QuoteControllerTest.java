@@ -1,9 +1,10 @@
 package com.ruanpablo2.fleet_quote_service.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.ruanpablo2.fleet_common.dtos.QuoteRequest;
 import com.ruanpablo2.fleet_common.dtos.QuoteVehicleRequest;
+import com.ruanpablo2.fleet_common.dtos.VehicleCoverageRequest;
+import com.ruanpablo2.fleet_common.enums.CoverageType;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,28 +40,42 @@ class QuoteControllerTest {
     void createQuote_ShouldReturn200_WhenRequestIsValid() throws Exception {
 
         String brokerName = "Corretora Top Seguros";
+        String brokerEmail = "demo@fleetrisk.com";
+
+        VehicleCoverageRequest coverage = new VehicleCoverageRequest(
+                CoverageType.RCF_DM,
+                null,
+                new BigDecimal("50000")
+        );
 
         QuoteVehicleRequest vehicleReq = new QuoteVehicleRequest(
-                "ABC-1234", "001004-9", "2020-1", new BigDecimal("50000")
+                "ABC-1234",
+                "001004-9",
+                "2020-1",
+                List.of(coverage)
         );
+
         QuoteRequest request = new QuoteRequest(
-                "Viação Estrela", "32.508.514/0001-49", brokerName, List.of(vehicleReq)
+                "Viação Estrela",
+                "32.508.514/0001-49",
+                brokerName,
+                List.of(vehicleReq)
         );
 
         Quote mockQuote = new Quote();
         mockQuote.setId(1L);
         mockQuote.setCustomerName("Viação Estrela");
 
-        when(quoteService.createInitialQuote(any(QuoteRequest.class), eq(brokerName)))
+        when(quoteService.createInitialQuote(any(QuoteRequest.class), eq(brokerName), anyString()))
                 .thenReturn(mockQuote);
 
         mockMvc.perform(post("/api/v1/quotes")
                         .header("X-Broker-Name", brokerName)
+                        .header("X-Broker-Email", brokerEmail)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
                 .andExpect(status().isCreated())
-
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.customerName").value("Viação Estrela"));
     }

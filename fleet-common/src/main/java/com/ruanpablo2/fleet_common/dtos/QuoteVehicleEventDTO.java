@@ -1,10 +1,10 @@
 package com.ruanpablo2.fleet_common.dtos;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 public record QuoteVehicleEventDTO(
-        Long vehicleId,
+        Long id,
         String fipeCode,
         String yearId,
-        BigDecimal coverageLimit
+        List<VehicleCoverageEventDTO> coverages
 ) {}
