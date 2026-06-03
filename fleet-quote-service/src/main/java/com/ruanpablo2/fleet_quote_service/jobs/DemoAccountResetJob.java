@@ -8,6 +8,7 @@ import com.ruanpablo2.fleet_quote_service.entities.QuoteVehicle;
 import com.ruanpablo2.fleet_quote_service.entities.VehicleCoverage;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.repositories.QuoteRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,12 @@ public class DemoAccountResetJob {
     public DemoAccountResetJob(QuoteRepository quoteRepository, RabbitTemplate rabbitTemplate) {
         this.quoteRepository = quoteRepository;
         this.rabbitTemplate = rabbitTemplate;
+    }
+
+    @PostConstruct
+    public void runNowOnProduction() {
+        System.out.println("⚠️ [PROD HOTFIX] Forçando criação dos dados da vitrine no deploy!");
+        resetDemoAccount();
     }
 
     @Scheduled(cron = "0 0 0,12 * * *", zone = "America/Sao_Paulo")
