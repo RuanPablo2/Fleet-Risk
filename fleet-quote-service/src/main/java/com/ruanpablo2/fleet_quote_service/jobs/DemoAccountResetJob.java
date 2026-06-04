@@ -75,7 +75,8 @@ public class DemoAccountResetJob {
                     v.getYearId(),
                     v.getLicensePlate(),
                     fipeValue,
-                    v.getCalculatedPremium()
+                    v.getCalculatedPremium(),
+                    java.util.List.of()
             ));
         }
 
