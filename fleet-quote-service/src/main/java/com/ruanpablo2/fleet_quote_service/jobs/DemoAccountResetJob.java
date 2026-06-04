@@ -1,5 +1,6 @@
 package com.ruanpablo2.fleet_quote_service.jobs;
 
+import com.ruanpablo2.fleet_common.dtos.QuoteCoverageApprovedDTO;
 import com.ruanpablo2.fleet_common.enums.CoverageType;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteApprovedEventDTO;
 import com.ruanpablo2.fleet_quote_service.dtos.QuoteVehicleApprovedDTO;
@@ -57,7 +58,7 @@ public class DemoAccountResetJob {
 
         publishDocumentEvent(approvedQuote);
 
-        System.out.println("✅ [CRON JOB] Vitrine restaurada com sucesso! Cotações originais do banco reinseridas e PDF engatilhado.");
+        System.out.println("✅ [CRON JOB] Cotações originais do banco reinseridas e PDF engatilhado.");
     }
 
     private void publishDocumentEvent(Quote quote) {
@@ -70,13 +71,24 @@ public class DemoAccountResetJob {
 
             String displayName = v.getModelName() != null ? v.getModelName() : "Vehicle (" + v.getFipeCode() + ")";
 
+            List<QuoteCoverageApprovedDTO> coverageDTOs = new ArrayList<>();
+            if (v.getCoverages() != null) {
+                v.getCoverages().forEach(c -> {
+                    coverageDTOs.add(new QuoteCoverageApprovedDTO(
+                            c.getType().name(),
+                            c.getFipePercentage(),
+                            c.getLimitAmount()
+                    ));
+                });
+            }
+
             vehicleDTOs.add(new QuoteVehicleApprovedDTO(
                     displayName,
                     v.getYearId(),
                     v.getLicensePlate(),
                     fipeValue,
                     v.getCalculatedPremium(),
-                    java.util.List.of()
+                    coverageDTOs
             ));
         }
 
