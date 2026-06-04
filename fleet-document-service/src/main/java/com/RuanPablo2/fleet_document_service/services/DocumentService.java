@@ -12,9 +12,11 @@ import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,13 +51,39 @@ public class DocumentService {
             context.setVariable("totalPremium", currencyFormatter.format(event.totalPremium()));
             context.setVariable("totalFipe", currencyFormatter.format(event.totalFipe()));
 
-            context.setVariable("vehicles", event.vehicles().stream().map(v -> new java.util.HashMap<String, String>() {{
-                put("modelName", v.modelName());
-                put("year", v.year());
-                put("licensePlate", v.licensePlate());
-                put("fipeValue", currencyFormatter.format(v.fipeValue()));
-                put("calculatedPremium", currencyFormatter.format(v.calculatedPremium()));
-            }}).toList());
+            context.setVariable("vehicles", event.vehicles().stream().map(v -> {
+                Map<String, Object> vehicleMap = new java.util.HashMap<>();
+                vehicleMap.put("modelName", v.modelName());
+                vehicleMap.put("year", v.year());
+                vehicleMap.put("licensePlate", v.licensePlate());
+                vehicleMap.put("fipeValue", currencyFormatter.format(v.fipeValue()));
+                vehicleMap.put("calculatedPremium", currencyFormatter.format(v.calculatedPremium()));
+
+                List<Map<String, String>> coveragesMap = v.coverages().stream().map(c -> {
+                    Map<String, String> cMap = new java.util.HashMap<>();
+                    String coverageName = switch (c.type()) {
+                        case "CASCO" -> "Casco (Compreensiva)";
+                        case "RCF_DM" -> "RCF - Danos Materiais";
+                        case "RCF_DC" -> "RCF - Danos Corporais";
+                        case "RCF_DMO" -> "RCF - Danos Morais";
+                        case "APP_MORTE" -> "APP - Morte/Invalidez";
+                        default -> c.type();
+                    };
+                    cMap.put("name", coverageName);
+
+                    if (c.fipePercentage() != null && c.fipePercentage().compareTo(BigDecimal.ZERO) > 0) {
+                        cMap.put("limit", c.fipePercentage() + "% da FIPE");
+                    } else if (c.limitAmount() != null) {
+                        cMap.put("limit", "R$ " + currencyFormatter.format(c.limitAmount()));
+                    } else {
+                        cMap.put("limit", "Contratado");
+                    }
+                    return cMap;
+                }).toList();
+
+                vehicleMap.put("coverages", coveragesMap);
+                return vehicleMap;
+            }).toList());
 
             String htmlContent = templateEngine.process("proposta", context);
 

@@ -261,12 +261,24 @@ public class QuoteService {
 
             String displayName = v.getModelName() != null ? v.getModelName() : "Vehicle (" + v.getFipeCode() + ")";
 
+            List<QuoteCoverageApprovedDTO> coverageDTOs = new ArrayList<>();
+            if (v.getCoverages() != null) {
+                v.getCoverages().forEach(c -> {
+                    coverageDTOs.add(new QuoteCoverageApprovedDTO(
+                            c.getType().name(),
+                            c.getFipePercentage(),
+                            c.getLimitAmount()
+                    ));
+                });
+            }
+
             vehicleDTOs.add(new QuoteVehicleApprovedDTO(
                     displayName,
                     v.getYearId(),
                     v.getLicensePlate(),
                     fipeValue,
-                    v.getCalculatedPremium()
+                    v.getCalculatedPremium(),
+                    coverageDTOs
             ));
         }
 

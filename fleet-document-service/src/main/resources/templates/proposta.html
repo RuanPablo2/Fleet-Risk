@@ -13,98 +13,29 @@
                 color: #777;
             }
         }
-        body {
-            font-family: 'arial', sans-serif;
-            font-size: 12px;
-            color: #333;
-        }
-        .header-table {
-            width: 100%;
-            border-bottom: 2px solid #004085;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .header-title {
-            color: #004085;
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0;
-        }
-        .header-info {
-            text-align: right;
-            font-size: 12px;
-            color: #555;
-        }
-        .section-title {
-            background-color: #004085;
-            color: #ffffff;
-            padding: 6px 10px;
-            font-weight: bold;
-            font-size: 14px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        .client-box {
-            border: 1px solid #cccccc;
-            padding: 10px;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-        }
-        p {
-            margin: 4px 0;
-        }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .data-table th, .data-table td {
-            border: 1px solid #cccccc;
-            padding: 8px;
-            text-align: left;
-        }
-        .data-table th {
-            background-color: #e9ecef;
-            color: #004085;
-            font-weight: bold;
-        }
-        .total-section {
-            margin-top: 20px;
-            text-align: right;
-            border-top: 2px solid #004085;
-            padding-top: 10px;
-        }
-        .total-fipe {
-            font-size: 14px;
-            color: #555;
-        }
-        .total-premium {
-            font-size: 20px;
-            font-weight: bold;
-            color: #004085;
-            margin-top: 5px;
-        }
-        .payment-info {
-            font-size: 11px;
-            color: #28a745;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        ul {
-            margin-top: 5px;
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 4px;
-        }
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 10px;
-            color: #777777;
-            border-top: 1px solid #cccccc;
-            padding-top: 10px;
-        }
+        body { font-family: 'arial', sans-serif; font-size: 12px; color: #333; }
+        .header-table { width: 100%; border-bottom: 2px solid #004085; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-title { color: #004085; font-size: 24px; font-weight: bold; margin: 0; }
+        .header-info { text-align: right; font-size: 12px; color: #555; }
+        .section-title { background-color: #004085; color: #ffffff; padding: 6px 10px; font-weight: bold; font-size: 14px; margin-top: 20px; margin-bottom: 10px; }
+        .client-box { border: 1px solid #cccccc; padding: 10px; border-radius: 4px; background-color: #f9f9f9; }
+        p { margin: 4px 0; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th, .data-table td { border: 1px solid #cccccc; padding: 8px; text-align: left; }
+        .data-table th { background-color: #e9ecef; color: #004085; font-weight: bold; }
+        .total-section { margin-top: 20px; text-align: right; border-top: 2px solid #004085; padding-top: 10px; }
+        .total-premium { font-size: 20px; font-weight: bold; color: #004085; margin-top: 5px; }
+        .payment-info { font-size: 11px; color: #28a745; margin-top: 5px; font-style: italic; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #777777; border-top: 1px solid #cccccc; padding-top: 10px; }
+
+        .page-break { page-break-before: always; }
+        .vehicle-item { margin-top: 20px; border: 1px solid #004085; border-radius: 4px; overflow: hidden; }
+        .vehicle-header { background-color: #f1f5f9; padding: 10px; border-bottom: 1px solid #ccc; }
+        .vehicle-header h3 { margin: 0 0 5px 0; color: #004085; font-size: 14px; }
+        .coverage-table { width: 100%; border-collapse: collapse; }
+        .coverage-table th, .coverage-table td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+        .coverage-table th { text-align: left; background-color: #fafafa; color: #555; }
+        .coverage-table tr:last-child td { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -113,84 +44,95 @@
     <tr>
         <td style="width: 60%;">
             <h1 class="header-title">FleetRisk</h1>
-            <p>Cotação de Seguro - Frota Comercial</p>
+            <p>Proposta Comercial de Seguro Frota</p>
         </td>
         <td class="header-info" style="width: 40%;">
-            <p><strong>Proposta Nº:</strong> <span th:text="${quoteId}">2026-00452</span></p>
-            <p><strong>Data:</strong> <span th:text="${date}">28 de Abril de 2026</span></p>
+            <p><strong>Proposta Nº:</strong> <span th:text="${quoteId}">2026-00000</span></p>
+            <p><strong>Emissão:</strong> <span th:text="${date}">01 de Janeiro de 2026</span></p>
         </td>
     </tr>
 </table>
 
 <div class="section-title">Dados do Segurado</div>
 <div class="client-box">
-    <p><strong>Segurado:</strong> <span th:text="${customerName}">Transportadora Global Logística Ltda</span></p>
-    <p><strong>CNPJ:</strong> <span th:text="${customerCnpj}">12.345.678/0001-90</span></p>
-    <p><strong>Corretor Responsável:</strong> <span th:text="${brokerName}">João Silva Corretora</span></p>
+    <p><strong>Segurado:</strong> <span th:text="${customerName}">Nome do Cliente</span></p>
+    <p><strong>CNPJ:</strong> <span th:text="${customerCnpj}">00.000.000/0000-00</span></p>
+    <p><strong>Corretor Responsável:</strong> <span th:text="${brokerName}">Corretora</span></p>
 </div>
 
-<div class="section-title">Veículos da Frota</div>
+<div class="section-title">Resumo da Frota</div>
 <table class="data-table">
     <thead>
     <tr>
+        <th>Placa</th>
         <th>Marca/Modelo</th>
         <th>Ano</th>
-        <th>Placa</th>
-        <th>Valor FIPE</th>
-        <th>Prêmio Líquido</th>
+        <th>Prêmio Líquido (R$)</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="vehicle : ${vehicles}">
-        <td th:text="${vehicle.modelName}">Volvo FH 540 6x4 (Caminhão)</td>
-        <td th:text="${vehicle.year}">2024</td>
         <td th:text="${vehicle.licensePlate}">ABC-1234</td>
-        <td th:text="${'R$ ' + vehicle.fipeValue}">R$ 750.000,00</td>
-        <td th:text="${'R$ ' + vehicle.calculatedPremium}">R$ 12.500,00</td>
-    </tr>
-    <tr th:if="${vehicles == null}">
-        <td>Scania R 450 (Caminhão)</td>
-        <td>2023</td>
-        <td>DEF-5678</td>
-        <td>R$ 680.000,00</td>
-        <td>R$ 11.200,00</td>
-    </tr>
-    <tr th:if="${vehicles == null}">
-        <td>Mercedes-Benz Sprinter 416</td>
-        <td>2022</td>
-        <td>GHI-9012</td>
-        <td>R$ 220.000,00</td>
-        <td>R$ 4.400,00</td>
-    </tr>
-    <tr th:if="${vehicles == null}">
-        <td>Volkswagen Delivery 11.180</td>
-        <td>2024</td>
-        <td>JKL-3456</td>
-        <td>R$ 310.000,00</td>
-        <td>R$ 5.800,00</td>
+        <td th:text="${vehicle.modelName}">Modelo do Veículo</td>
+        <td th:text="${vehicle.year}">2024</td>
+        <td th:text="${'R$ ' + vehicle.calculatedPremium}">R$ 0,00</td>
     </tr>
     </tbody>
 </table>
 
 <div class="total-section">
-    <div class="total-fipe">Total da Frota (Valor FIPE): <span th:text="${'R$ ' + totalFipe}">R$ 1.960.000,00</span></div>
-    <div class="total-premium">Prêmio total: <span th:text="${'R$ ' + totalPremium}">R$ 33.900,00</span></div>
-    <div class="payment-info">Parcelamento em até 10x sem juros no débito em conta.</div>
-</div>
-
-<div class="section-title">Coberturas Inclusas</div>
-<div class="client-box">
-    <ul>
-        <li>Colisão, Incêndio e Roubo/Furto (Compreensiva)</li>
-        <li>RCF-V (Danos Materiais e Corporais a Terceiros)</li>
-        <li>Assistência 24h com Guincho Ilimitado para Pesados</li>
-        <li>Cobertura Adicional para Carga e Equipamentos</li>
-    </ul>
+    <div style="font-size: 14px; color: #555;">Soma de Valor FIPE (Risco Total): <span th:text="${'R$ ' + totalFipe}">R$ 0,00</span></div>
+    <div class="total-premium">Prêmio Total da Frota: <span th:text="${'R$ ' + totalPremium}">R$ 0,00</span></div>
+    <div class="payment-info">Parcelamento disponível em até 10x sem juros ou 12x com juros.</div>
 </div>
 
 <div class="footer">
-    <p>FleetRisk Systems - Desenvolvido por Ruan Pablo | Junior Java Developer</p>
-    <p>Documento gerado automaticamente pelo FleetRisk Cloud Services.</p>
+    <p>Documento confidencial gerado pelo sistema FleetRisk Cloud Services.</p>
+</div>
+
+<div class="page-break"></div>
+
+<table class="header-table">
+    <tr>
+        <td><h2 class="header-title" style="font-size: 18px;">Espelho da Frota - Condições Contratadas</h2></td>
+        <td class="header-info"><span th:text="${quoteId}">2026-00000</span></td>
+    </tr>
+</table>
+
+<div th:each="vehicle, iterStat : ${vehicles}" class="vehicle-item">
+    <div class="vehicle-header">
+        <h3>Item <span th:text="${iterStat.count}">1</span>: <span th:text="${vehicle.modelName}">Modelo</span></h3>
+        <table style="width: 100%; font-size: 11px;">
+            <tr>
+                <td><strong>Placa:</strong> <span th:text="${vehicle.licensePlate}">ABC</span></td>
+                <td><strong>Ano Fab/Mod:</strong> <span th:text="${vehicle.year}">2020</span></td>
+                <td><strong>Valor FIPE:</strong> <span th:text="${'R$ ' + vehicle.fipeValue}">0k</span></td>
+                <td style="text-align: right; color:#004085;"><strong>Prêmio do Item:</strong> <span th:text="${'R$ ' + vehicle.calculatedPremium}">0</span></td>
+            </tr>
+        </table>
+    </div>
+    <table class="coverage-table">
+        <thead>
+        <tr>
+            <th style="width: 70%;">Cobertura</th>
+            <th style="width: 30%; text-align: right;">Limite Máximo de Indenização (LMI)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="cov : ${vehicle.coverages}">
+            <td th:text="${cov.name}">Casco</td>
+            <td style="text-align: right; font-weight: bold;" th:text="${cov.limit}">100% da FIPE</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(vehicle.coverages)}">
+            <td colspan="2" style="text-align: center; color: #999;">Nenhuma cobertura informada para este item.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="footer" style="margin-top: 20px;">
+    <p>As coberturas acima estão sujeitas às Condições Gerais da apólice.</p>
+    <p>FleetRisk Systems - Ruan Pablo</p>
 </div>
 
 </body>
