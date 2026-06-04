@@ -76,6 +76,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://fleet-db:5432/fleet_auth_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}
     depends_on:
       - postgres
     networks:
@@ -94,6 +95,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
       - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
       - VEHICLE_SERVICE_URL=http://fleet-vehicle-service:8082/api/v1/vehicles
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}
     depends_on:
       - postgres
       - rabbitmq
@@ -114,6 +116,7 @@ services:
       - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
       - SPRING_DATA_REDIS_HOST=fleet-redis
       - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - HIBERNATE_DDL_AUTO=${HIBERNATE_DDL_AUTO}
     depends_on:
       - postgres
       - redis
