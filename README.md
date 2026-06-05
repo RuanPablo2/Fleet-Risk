@@ -21,6 +21,8 @@ Sistema avançado de cotação de seguros para frotas comerciais construído sob
 
 - **Ambiente de Demonstração Auto-Gerenciável:** Implementação de um Cron Job nativo no Spring Boot que roda a cada 12 horas, limpando dados de teste de usuários e restaurando automaticamente uma "vitrine" de cotações perfeitas no banco de dados para avaliação de recrutadores, sem consumir APIs externas.
 
+- **Modelagem de Risco detalhado e Inclusão em Lote:** Suporte a múltiplas coberturas independentes por veículo (Casco, RCF-DM, RCF-DC, RCF-DMO, APP) com fluxos otimizados para adição de frota em lote e recuperação de dados para edições unitárias.
+
 - **Comunicação Real-Time Resiliente:** Uso de WebSockets integrados com **SockJS** para garantir o bypass em regras estritas de proxies reversos (Nginx) e API Gateways, permitindo a atualização do prêmio atuarial na tela do frontend em tempo real, sem falhas de handshake ou CORS.
 
 ## ☁️ Arquitetura de Nuvem e DevOps
@@ -161,6 +163,7 @@ REDIS_PASSWORD=sua_senha_redis
 JWT_SECRET=sua_chave_secreta_longa_em_base64_aqui
 MAIL_USERNAME=seu_email@gmail.com
 MAIL_PASSWORD=senha_de_app_do_google
+HIBERNATE_DDL_AUTO=update
 ```
 
 **3. Executar via Docker Compose**
