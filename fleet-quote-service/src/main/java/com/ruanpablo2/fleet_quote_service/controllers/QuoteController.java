@@ -6,6 +6,7 @@ import com.ruanpablo2.fleet_quote_service.dtos.QuoteResponse;
 import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import com.ruanpablo2.fleet_quote_service.entities.enums.QuoteStatus;
 import com.ruanpablo2.fleet_quote_service.services.QuoteService;
+import com.ruanpablo2.fleet_quote_service.services.BrokerMessageService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,15 +17,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/quotes")
 public class QuoteController {
 
     private final QuoteService quoteService;
+    private final BrokerMessageService brokerMessageService;
 
-    public QuoteController(QuoteService service) {
-        this.quoteService = service;
+    public QuoteController(QuoteService quoteService, BrokerMessageService brokerMessageService) {
+        this.quoteService = quoteService;
+        this.brokerMessageService = brokerMessageService;
     }
 
     @GetMapping
@@ -79,7 +83,7 @@ public class QuoteController {
             @PathVariable Long id,
             @Valid @RequestBody QuoteRequest request,
             @RequestHeader("X-Broker-Name") String encodedBrokerName,
-            @RequestHeader("X-Broker-Email") String brokerEmail) { // 👈 Novo Header
+            @RequestHeader("X-Broker-Email") String brokerEmail) {
 
         String brokerName = decodeHeader(encodedBrokerName);
         quoteService.calculateQuote(id, request, brokerName, brokerEmail);
@@ -106,14 +110,26 @@ public class QuoteController {
         return ResponseEntity.accepted().build();
     }
 
-    private String decodeHeader(String encodedValue) {
-        if (encodedValue == null) return null;
-        return URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
+    @PostMapping("/{id}/broker-message")
+    public ResponseEntity<Map<String, String>> generateBrokerMessage(
+            @PathVariable Long id,
+            @RequestHeader("X-Broker-Name") String encodedBrokerName) {
+
+        String brokerName = decodeHeader(encodedBrokerName);
+        Quote quote = quoteService.getQuoteById(id, brokerName); 
+        String message = brokerMessageService.generateWhatsAppMessage(quote);
+        
+        return ResponseEntity.ok(Map.of("message", message));
     }
 
     @GetMapping("/kpis")
     public ResponseEntity<QuoteKpiResponse> getKpis(@RequestHeader("X-Broker-Name") String encodedBrokerName) {
         String brokerName = decodeHeader(encodedBrokerName);
         return ResponseEntity.ok(quoteService.getKpis(brokerName));
+    }
+
+    private String decodeHeader(String encodedValue) {
+        if (encodedValue == null) return null;
+        return URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
     }
 }
