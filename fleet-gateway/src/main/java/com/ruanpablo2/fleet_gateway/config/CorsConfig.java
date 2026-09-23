@@ -19,6 +19,7 @@ public class CorsConfig {
     @Bean
     public FilterRegistrationBean<CorsFilter> customCorsFilter() {
         CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(Collections.singletonList("*"));
 
         config.setAllowedOrigins(Arrays.asList(corsOrigins.split(","));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

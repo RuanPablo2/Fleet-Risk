@@ -21,7 +21,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue quoteCreatedQueue() {
-        return new Queue(QUEUE_QUOTE_CREATED, true); // true = durable (não perde se o RabbitMQ reiniciar)
+        return new Queue(QUEUE_QUOTE_CREATED, true);
     }
 
     @Bean
