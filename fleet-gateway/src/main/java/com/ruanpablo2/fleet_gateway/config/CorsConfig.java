@@ -13,7 +13,7 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
-    @Value("${CORS_ORIGINS:http://localhost:4200}")
+    @Value("${cors.origins}")
     private String corsOrigins;
 
     @Bean
