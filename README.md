@@ -13,7 +13,7 @@ Sistema avançado de cotação de seguros para frotas comerciais construído sob
 
 ## 🚀 Acesse o projeto em produção
 
-- **Aplicação Front-end:** https://fleetrisk.netlify.app/login
+- **Aplicação Front-end:** [https://fleetrisk.netlify.app](https://fleetrisk.vercel.app)
 
 - **Documentação da API (Swagger):** https://fleetrisk-ruanpablo2.duckdns.org/swagger-ui/index.html
 
