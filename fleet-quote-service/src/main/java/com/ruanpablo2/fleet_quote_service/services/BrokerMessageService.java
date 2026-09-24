@@ -10,12 +10,14 @@ import org.springframework.web.client.RestClient;
 public class BrokerMessageService {
 
     private final RestClient restClient;
+    private final String apiKey;
 
-    @Value("${gemini.api.key}")
-    private String apiKey;
-
-    public BrokerMessageService(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl("https://generativelanguage.googleapis.com").build();
+    public BrokerMessageService(@Value("${GEMINI_API_KEY}") String apiKey) {
+        // Fixamos a URL do Google direto na construção do cliente
+        this.restClient = RestClient.builder()
+                .baseUrl("https://generativelanguage.googleapis.com")
+                .build();
+        this.apiKey = apiKey;
     }
 
     public String generateWhatsAppMessage(Quote quote) {
