@@ -1,7 +1,7 @@
-package com.ruanpablo2.fleet_quote.service;
+package com.ruanpablo2.fleet_quote_service.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.ruanpablo2.fleet_quote.model.Quote;
+import com.ruanpablo2.fleet_quote_service.entities.Quote;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -24,7 +24,7 @@ public class BrokerMessageService {
             "A mensagem deve informar que a cotação da frota foi aprovada. " +
             "Dados: Cliente %s, Valor Total R$ %.2f, Validade da Proposta: 7 dias. " +
             "Não use formatações complexas, use emojis adequados para negócios.",
-            quote.getClientName(), quote.getTotalPremium()
+            quote.getCustomerName(), quote.getTotalPremium()
         );
 
         String requestBody = """
