@@ -15,14 +15,14 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${app.cors.origins}")
-    private String corsOrigins;
-
     @Bean
     public FilterRegistrationBean<CorsFilter> customCorsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        List<String> allowedOrigins = Arrays.asList(corsOrigins.split(","));
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "https://fleetrisk.vercel.app"
+        ));
 
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
