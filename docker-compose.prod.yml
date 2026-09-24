@@ -57,7 +57,6 @@ services:
       - APP_PROFILE=prod
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - QUOTE_SERVICE_URL=http://fleet-quote-service:8081
       - VEHICLE_SERVICE_URL=http://fleet-vehicle-service:8082
       - AUTH_SERVICE_URL=http://fleet-auth-service:8090
@@ -93,6 +92,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://fleet-db:5432/fleet_quote_db
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SPRING_RABBITMQ_HOST=fleet-rabbitmq
       - SPRING_RABBITMQ_USERNAME=${RABBIT_USER}
       - SPRING_RABBITMQ_PASSWORD=${RABBIT_PASSWORD}
