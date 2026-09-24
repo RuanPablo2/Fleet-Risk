@@ -1,5 +1,6 @@
 package com.ruanpablo2.fleet_gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,19 +10,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.origins}")
+    @Value("${CORS_ORIGINS:http://localhost:4200}")
     private String corsOrigins;
 
     @Bean
     public FilterRegistrationBean<CorsFilter> customCorsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(Collections.singletonList("*"));
 
-        config.setAllowedOrigins(Arrays.asList(corsOrigins.split(","));
+        List<String> allowedOrigins = Arrays.asList(corsOrigins.split(","));
+
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true);
@@ -30,7 +33,6 @@ public class CorsConfig {
         source.registerCorsConfiguration("/**", config);
 
         CorsFilter filter = new CorsFilter(source);
-
         FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(filter);
 
         bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
